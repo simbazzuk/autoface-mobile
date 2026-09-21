@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "AutoFace",
+    "slug": "autoface-mobile",
+    "version": "0.1.16.2",
+    "orientation": "portrait",
+    "scheme": "autoface",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "chat.mip.autoface",
+      "buildNumber": "14",
+      "infoPlist": {
+        "NSCameraUsageDescription": "AutoFace uses the camera for profile and authenticity verification.",
+        "NSPhotoLibraryUsageDescription": "AutoFace uses your photo library so you can choose a profile photo."
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      "./plugins/with-autoface-liveness"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "splash": {
+      "image": "./assets/autoface-splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "owner": "simbazzuk",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7bdb4af0-c5de-47a9-9b68-f550b043b8aa"
+      }
+    }
+  }
+}

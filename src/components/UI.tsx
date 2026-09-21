@@ -1,0 +1,12 @@
+import React from 'react';
+import {ActivityIndicator,Pressable,StyleSheet,Text,TextInput,TextInputProps,View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {useAppTheme} from '@/src/context/Theme';
+export function Screen({children,title,eyebrow}:{children:React.ReactNode,title?:string,eyebrow?:string}){const {colors}=useAppTheme();return <SafeAreaView style={[s.safe,{backgroundColor:colors.bg}]}><View style={s.page}>{eyebrow?<Text style={[s.eye,{color:colors.blue}]}>{eyebrow}</Text>:null}{title?<Text style={[s.h1,{color:colors.ink}]}>{title}</Text>:null}{children}</View></SafeAreaView>}
+export function Card({children}:{children:React.ReactNode}){const {colors}=useAppTheme();return <View style={[s.card,{backgroundColor:colors.card,borderColor:colors.line}]}>{children}</View>}
+export function Button({title,onPress,secondary,disabled}:{title:string,onPress:()=>void,secondary?:boolean,disabled?:boolean}){const {colors}=useAppTheme();return <Pressable disabled={disabled} onPress={onPress} style={[s.btn,{backgroundColor:secondary?colors.card:colors.blue,borderColor:secondary?colors.line:colors.blue},secondary&&s.btn2,disabled&&{opacity:.5}]}><Text style={[s.bt,{color:secondary?colors.ink:'#FFFFFF'}]}>{title}</Text></Pressable>}
+export function H2({children}:{children:React.ReactNode}){const {colors}=useAppTheme();return <Text style={[s.h2,{color:colors.ink}]}>{children}</Text>}
+export function Body({children,error}:{children:React.ReactNode,error?:boolean}){const {colors}=useAppTheme();return <Text style={[s.body,{color:error?colors.rose:colors.muted}]}>{children}</Text>}
+export function Input(props:TextInputProps){const {colors}=useAppTheme();return <TextInput {...props} placeholderTextColor={colors.placeholder} style={[s.input,{backgroundColor:colors.input,borderColor:colors.line,color:colors.text},props.style]}/>} 
+export function Loading(){const {colors}=useAppTheme();return <View style={{padding:40}}><ActivityIndicator size="large" color={colors.blue}/></View>}
+const s=StyleSheet.create({safe:{flex:1},page:{flex:1,padding:20,gap:12},eye:{fontSize:12,fontWeight:'800',letterSpacing:1.2},h1:{fontSize:30,lineHeight:36,fontWeight:'800'},h2:{fontSize:20,lineHeight:26,fontWeight:'800'},body:{fontSize:16,lineHeight:23},card:{borderWidth:1,borderRadius:20,padding:18,gap:10},btn:{borderRadius:14,paddingVertical:14,paddingHorizontal:18,alignItems:'center',borderWidth:1},btn2:{borderWidth:1},bt:{fontWeight:'800',fontSize:16},input:{borderWidth:1,borderRadius:14,padding:14,fontSize:16}});

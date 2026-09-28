@@ -1,5 +1,5 @@
 {
-  "platforms": ["ios"],
+  "platforms": ["apple"],
   "apple": {
     "modules": ["AutoFaceLivenessModule"]
   }

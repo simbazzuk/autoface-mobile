@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "scheme": "autoface",
     "userInterfaceStyle": "automatic",
+
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "chat.mip.autoface",
@@ -17,6 +18,7 @@
         "ExpoModulesProviderModuleName": "AutoFace"
       }
     },
+
     "plugins": [
       "expo-router",
       "expo-notifications",
@@ -29,12 +31,23 @@
           "resizeMode": "contain",
           "backgroundColor": "#000000"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "enableSceneSupport": true
+          }
+        }
       ]
     ],
+
     "experiments": {
       "typedRoutes": true
     },
+
     "owner": "simbazzuk",
+
     "extra": {
       "router": {},
       "eas": {

@@ -20,6 +20,9 @@ class AppDelegate: ExpoAppDelegate, ExpoReactNativeFactoryProvider {
     reactNativeDelegate = delegate
     reactNativeFactory = factory
 
+    // Install the native AWS Face Liveness presenter.
+    AutoFaceLivenessPresenter.shared.install()
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

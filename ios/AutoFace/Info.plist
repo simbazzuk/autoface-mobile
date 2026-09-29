@@ -39,7 +39,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>29</string>
+	<string>35</string>
 	<key>ExpoModulesProviderModuleName</key>
 	<string>AutoFace</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
@@ -63,8 +63,12 @@
 	<string>AutoFace uses the camera for profile and authenticity verification.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Expo Dev Launcher uses the local network to discover and connect to development servers running on your computer.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allow $(PRODUCT_NAME) to access your microphone</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>AutoFace uses your photo library so you can choose a profile photo.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>AutoFace may use speech recognition to support voice-enabled features.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

@@ -8,29 +8,35 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		350AD4BD787E471C8D953CAB /* AutoFaceLivenessPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC0222EF15B445D8415EC45 /* AutoFaceLivenessPresenter.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		AE7592E2F1778860AEC418EE /* libPods-AutoFace.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D06AE59FACCA8CA0FA222CCA /* libPods-AutoFace.a */; };
+		5EF144A1DBD9671D19DE56AE /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C72447EF890028DB5F72EDAA /* ExpoModulesProvider.swift */; };
+		659B1A03CAE3460694D6CE6F /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = C56547FE60FF4FD1A65AD6CD /* AWSCognitoAuthPlugin */; };
+		80863C05922A43D795BECB9F /* Amplify in Frameworks */ = {isa = PBXBuildFile; productRef = 1F170B65DFEA4019A5CC5B80 /* Amplify */; };
+		A9AFEAFE7366465EBCEB0541 /* FaceLiveness in Frameworks */ = {isa = PBXBuildFile; productRef = 86C88F288E9C49CEB2E3C061 /* FaceLiveness */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		BF1D054C19B2AD57B9EA5153 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B398DF64D823348746E28D9D /* PrivacyInfo.xcprivacy */; };
-		DE9FB10C375B6067CE193392 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2C90D901B304461CB568494 /* ExpoModulesProvider.swift */; };
+		BF6CA1C2EEE8FC41F1450FB9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6EDFAD617D07AC0FCBC46117 /* PrivacyInfo.xcprivacy */; };
+		D871296C31E6449AB6B00E7D /* amplifyconfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = C93C6C52654A49E995ECB62C /* amplifyconfiguration.json */; };
+		E55FC048CA7D6449B61E4103 /* libPods-AutoFace.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 963BFDD81014637DF7C250E3 /* libPods-AutoFace.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		FA3E00D4455D4F4FBC573202 /* FaceLiveness in Frameworks */ = {isa = PBXBuildFile; productRef = E5C79E04534744A7AB8F0664 /* FaceLiveness */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		13B07F961A680F5B00A75B9A /* AutoFace.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AutoFace.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AutoFace/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AutoFace/Info.plist; sourceTree = "<group>"; };
+		60B935320CE58EFD37498267 /* Pods-AutoFace.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AutoFace.debug.xcconfig"; path = "Target Support Files/Pods-AutoFace/Pods-AutoFace.debug.xcconfig"; sourceTree = "<group>"; };
+		6EDFAD617D07AC0FCBC46117 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = AutoFace/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		963BFDD81014637DF7C250E3 /* libPods-AutoFace.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AutoFace.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = AutoFace/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B398DF64D823348746E28D9D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = AutoFace/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		ABC0222EF15B445D8415EC45 /* AutoFaceLivenessPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AutoFaceLivenessPresenter.swift; path = AutoFace/AutoFaceLivenessPresenter.swift; sourceTree = "<group>"; };
+		B7E8BAC1D59F2AEBAEACEB44 /* Pods-AutoFace.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AutoFace.release.xcconfig"; path = "Target Support Files/Pods-AutoFace/Pods-AutoFace.release.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		C2C90D901B304461CB568494 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-AutoFace/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		D06AE59FACCA8CA0FA222CCA /* libPods-AutoFace.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AutoFace.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C72447EF890028DB5F72EDAA /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-AutoFace/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		C93C6C52654A49E995ECB62C /* amplifyconfiguration.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = amplifyconfiguration.json; path = AutoFace/amplifyconfiguration.json; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = AutoFace/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* AutoFace-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "AutoFace-Bridging-Header.h"; path = "AutoFace/AutoFace-Bridging-Header.h"; sourceTree = "<group>"; };
-		FACB29E5BD79B9C667F6B7B8 /* Pods-AutoFace.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AutoFace.debug.xcconfig"; path = "Target Support Files/Pods-AutoFace/Pods-AutoFace.debug.xcconfig"; sourceTree = "<group>"; };
-		FD78F264F96287457EA6926C /* Pods-AutoFace.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AutoFace.release.xcconfig"; path = "Target Support Files/Pods-AutoFace/Pods-AutoFace.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,8 +44,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FA3E00D4455D4F4FBC573202 /* FaceLiveness in Frameworks */,
-				AE7592E2F1778860AEC418EE /* libPods-AutoFace.a in Frameworks */,
+				A9AFEAFE7366465EBCEB0541 /* FaceLiveness in Frameworks */,
+				80863C05922A43D795BECB9F /* Amplify in Frameworks */,
+				659B1A03CAE3460694D6CE6F /* AWSCognitoAuthPlugin in Frameworks */,
+				E55FC048CA7D6449B61E4103 /* libPods-AutoFace.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -55,7 +63,15 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				B398DF64D823348746E28D9D /* PrivacyInfo.xcprivacy */,
+				6EDFAD617D07AC0FCBC46117 /* PrivacyInfo.xcprivacy */,
+			);
+			name = AutoFace;
+			sourceTree = "<group>";
+		};
+		231A6687BE3386D510C58B39 /* AutoFace */ = {
+			isa = PBXGroup;
+			children = (
+				C72447EF890028DB5F72EDAA /* ExpoModulesProvider.swift */,
 			);
 			name = AutoFace;
 			sourceTree = "<group>";
@@ -64,27 +80,9 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				D06AE59FACCA8CA0FA222CCA /* libPods-AutoFace.a */,
+				963BFDD81014637DF7C250E3 /* libPods-AutoFace.a */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		69D91F5FB2B5876C8B862B30 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				F2505A4DDEE69F3DFA053FE1 /* AutoFace */,
-			);
-			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
-		7F38A4A9EAA98EE023FEF2DB /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				FACB29E5BD79B9C667F6B7B8 /* Pods-AutoFace.debug.xcconfig */,
-				FD78F264F96287457EA6926C /* Pods-AutoFace.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -101,8 +99,10 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				7F38A4A9EAA98EE023FEF2DB /* Pods */,
-				69D91F5FB2B5876C8B862B30 /* ExpoModulesProviders */,
+				ABC0222EF15B445D8415EC45 /* AutoFaceLivenessPresenter.swift */,
+				C93C6C52654A49E995ECB62C /* amplifyconfiguration.json */,
+				9DFD0F9C9BF176478B3BDAB9 /* Pods */,
+				BE48CCA5BED4DE8F0E49E2F1 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -117,6 +117,15 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		9DFD0F9C9BF176478B3BDAB9 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				60B935320CE58EFD37498267 /* Pods-AutoFace.debug.xcconfig */,
+				B7E8BAC1D59F2AEBAEACEB44 /* Pods-AutoFace.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -126,12 +135,12 @@
 			path = AutoFace/Supporting;
 			sourceTree = "<group>";
 		};
-		F2505A4DDEE69F3DFA053FE1 /* AutoFace */ = {
+		BE48CCA5BED4DE8F0E49E2F1 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				C2C90D901B304461CB568494 /* ExpoModulesProvider.swift */,
+				231A6687BE3386D510C58B39 /* AutoFace */,
 			);
-			name = AutoFace;
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -142,14 +151,14 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AutoFace" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				D4371EDDBB98BDC9839E3082 /* [Expo] Configure project */,
+				081F5BFE325E255548C0F48E /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				7D2F682F4DE5456BAE9FB25B /* [Expo Dev Launcher] Strip Local Network Keys for Release */,
-				83B4BC37C864A7E7C010D9AA /* [CP] Embed Pods Frameworks */,
+				FA7533CCBA374EF0B3AA8964 /* [Expo Dev Launcher] Strip Local Network Keys for Release */,
+				FA7EDD7D7ACBE47ADE09ED11 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -157,7 +166,9 @@
 			);
 			name = AutoFace;
 			packageProductDependencies = (
-				E5C79E04534744A7AB8F0664 /* FaceLiveness */,
+				86C88F288E9C49CEB2E3C061 /* FaceLiveness */,
+				1F170B65DFEA4019A5CC5B80 /* Amplify */,
+				C56547FE60FF4FD1A65AD6CD /* AWSCognitoAuthPlugin */,
 			);
 			productName = AutoFace;
 			productReference = 13B07F961A680F5B00A75B9A /* AutoFace.app */;
@@ -186,7 +197,8 @@
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			packageReferences = (
-				9257CD52C8964F1AAFA27DE4 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */,
+				96E0A65DEC954540AD1515F5 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */,
+				B35F21B6D4244A60B52F4141 /* XCRemoteSwiftPackageReference "amplify-swift" */,
 			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
@@ -205,7 +217,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				BF1D054C19B2AD57B9EA5153 /* PrivacyInfo.xcprivacy in Resources */,
+				D871296C31E6449AB6B00E7D /* amplifyconfiguration.json in Resources */,
+				BF6CA1C2EEE8FC41F1450FB9 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,6 +242,30 @@
 			shellPath = /bin/sh;
 			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
 		};
+		081F5BFE325E255548C0F48E /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/AutoFace/AutoFace.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-AutoFace/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-AutoFace/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-AutoFace/expo-configure-project.sh\"\n";
+		};
 		08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -250,20 +287,6 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
-		};
-		7D2F682F4DE5456BAE9FB25B /* [Expo Dev Launcher] Strip Local Network Keys for Release */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo Dev Launcher] Strip Local Network Keys for Release";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Strip dev-launcher-specific local network permission keys from non-Debug builds\n# This only removes _expo._tcp Bonjour services and the dev-launcher usage description.\n# Other Bonjour services and custom descriptions are preserved for production use.\n\nif [ \"$CONFIGURATION\" != \"Debug\" ]; then\n  PLIST_PATH=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n  if [ -f \"$PLIST_PATH\" ]; then\n    # Check if NSBonjourServices exists\n    if /usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" >/dev/null 2>&1; then\n      # Get the count of services\n      COUNT=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null | grep \"^    \" | wc -l | tr -d ' ')\n\n      # Remove _expo._tcp\n      for ((i=COUNT-1; i>=0; i--)); do\n        SERVICE=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices:$i\" \"$PLIST_PATH\" 2>/dev/null || echo \"\")\n        if echo \"$SERVICE\" | grep -q \"_expo._tcp\"; then\n          /usr/libexec/PlistBuddy -c \"Delete :NSBonjourServices:$i\" \"$PLIST_PATH\" 2>/dev/null || true\n        fi\n      done\n\n      # If the array is now empty, remove it entirely\n      REMAINING=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null | grep \"^    \" | wc -l | tr -d ' ')\n      if [ \"$REMAINING\" -eq \"0\" ]; then\n        /usr/libexec/PlistBuddy -c \"Delete :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null || true\n      fi\n    fi\n\n    # Only delete the description if it matches the dev-launcher default text\n    DESC=$(/usr/libexec/PlistBuddy -c \"Print :NSLocalNetworkUsageDescription\" \"$PLIST_PATH\" 2>/dev/null || echo \"\")\n    if echo \"$DESC\" | grep -q \"Expo Dev Launcher\"; then\n      /usr/libexec/PlistBuddy -c \"Delete :NSLocalNetworkUsageDescription\" \"$PLIST_PATH\" 2>/dev/null || true\n    fi\n  fi\nfi\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -303,7 +326,21 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AutoFace/Pods-AutoFace-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		83B4BC37C864A7E7C010D9AA /* [CP] Embed Pods Frameworks */ = {
+		FA7533CCBA374EF0B3AA8964 /* [Expo Dev Launcher] Strip Local Network Keys for Release */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[Expo Dev Launcher] Strip Local Network Keys for Release";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Strip dev-launcher-specific local network permission keys from non-Debug builds\n# This only removes _expo._tcp Bonjour services and the dev-launcher usage description.\n# Other Bonjour services and custom descriptions are preserved for production use.\n\nif [ \"$CONFIGURATION\" != \"Debug\" ]; then\n  PLIST_PATH=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n  if [ -f \"$PLIST_PATH\" ]; then\n    # Check if NSBonjourServices exists\n    if /usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" >/dev/null 2>&1; then\n      # Get the count of services\n      COUNT=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null | grep \"^    \" | wc -l | tr -d ' ')\n\n      # Remove _expo._tcp\n      for ((i=COUNT-1; i>=0; i--)); do\n        SERVICE=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices:$i\" \"$PLIST_PATH\" 2>/dev/null || echo \"\")\n        if echo \"$SERVICE\" | grep -q \"_expo._tcp\"; then\n          /usr/libexec/PlistBuddy -c \"Delete :NSBonjourServices:$i\" \"$PLIST_PATH\" 2>/dev/null || true\n        fi\n      done\n\n      # If the array is now empty, remove it entirely\n      REMAINING=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null | grep \"^    \" | wc -l | tr -d ' ')\n      if [ \"$REMAINING\" -eq \"0\" ]; then\n        /usr/libexec/PlistBuddy -c \"Delete :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null || true\n      fi\n    fi\n\n    # Only delete the description if it matches the dev-launcher default text\n    DESC=$(/usr/libexec/PlistBuddy -c \"Print :NSLocalNetworkUsageDescription\" \"$PLIST_PATH\" 2>/dev/null || echo \"\")\n    if echo \"$DESC\" | grep -q \"Expo Dev Launcher\"; then\n      /usr/libexec/PlistBuddy -c \"Delete :NSLocalNetworkUsageDescription\" \"$PLIST_PATH\" 2>/dev/null || true\n    fi\n  fi\nfi\n";
+		};
+		FA7EDD7D7ACBE47ADE09ED11 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -335,30 +372,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AutoFace/Pods-AutoFace-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D4371EDDBB98BDC9839E3082 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/AutoFace/AutoFace.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-AutoFace/expo-configure-project.sh",
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-AutoFace/ExpoModulesProvider.swift",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-AutoFace/expo-configure-project.sh\"\n";
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -367,7 +380,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				DE9FB10C375B6067CE193392 /* ExpoModulesProvider.swift in Sources */,
+				350AD4BD787E471C8D953CAB /* AutoFaceLivenessPresenter.swift in Sources */,
+				5EF144A1DBD9671D19DE56AE /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,12 +390,13 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FACB29E5BD79B9C667F6B7B8 /* Pods-AutoFace.debug.xcconfig */;
+			baseConfigurationReference = 60B935320CE58EFD37498267 /* Pods-AutoFace.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = AutoFace/AutoFace.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 35;
+				DEVELOPMENT_TEAM = GDFZ555M9T;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -394,7 +409,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.4;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.1.16;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -413,12 +428,13 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FD78F264F96287457EA6926C /* Pods-AutoFace.release.xcconfig */;
+			baseConfigurationReference = B7E8BAC1D59F2AEBAEACEB44 /* Pods-AutoFace.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = AutoFace/AutoFace.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 35;
+				DEVELOPMENT_TEAM = GDFZ555M9T;
 				INFOPLIST_FILE = AutoFace/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -426,7 +442,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.4;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.1.16;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -602,7 +618,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		9257CD52C8964F1AAFA27DE4 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */ = {
+		96E0A65DEC954540AD1515F5 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/aws-amplify/amplify-ui-swift-liveness";
 			requirement = {
@@ -610,13 +626,31 @@
 				minimumVersion = 1.4.5;
 			};
 		};
+		B35F21B6D4244A60B52F4141 /* XCRemoteSwiftPackageReference "amplify-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/aws-amplify/amplify-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.62.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E5C79E04534744A7AB8F0664 /* FaceLiveness */ = {
+		1F170B65DFEA4019A5CC5B80 /* Amplify */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 9257CD52C8964F1AAFA27DE4 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */;
+			package = B35F21B6D4244A60B52F4141 /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = Amplify;
+		};
+		86C88F288E9C49CEB2E3C061 /* FaceLiveness */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 96E0A65DEC954540AD1515F5 /* XCRemoteSwiftPackageReference "amplify-ui-swift-liveness" */;
 			productName = FaceLiveness;
+		};
+		C56547FE60FF4FD1A65AD6CD /* AWSCognitoAuthPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B35F21B6D4244A60B52F4141 /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = AWSCognitoAuthPlugin;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

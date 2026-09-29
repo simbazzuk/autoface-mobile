@@ -1,6 +1,7 @@
 import React,{useCallback,useEffect,useMemo,useState} from 'react';
 import {
   Image,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -8,7 +9,7 @@ import {
   TextInput,
   View
 } from 'react-native';
-import {useFocusEffect} from 'expo-router';
+import {router,useFocusEffect} from 'expo-router';
 import {api,profilePhoto} from '@/src/lib/api';
 import {Body,Button,Card,H2,Screen} from '@/src/components/UI';
 import {useAppTheme} from '@/src/context/Theme';
@@ -34,6 +35,17 @@ type Candidate={
 type D={
   eligible:boolean;
   candidates:Candidate[];
+};
+
+type InterestResponse={
+  ok:boolean;
+  matched:boolean;
+  matchId?:string|null;
+};
+
+type MatchMoment={
+  candidate:Candidate;
+  matchId:string;
 };
 
 type AgeRange='all'|'25-34'|'35-44'|'45+';
@@ -62,6 +74,9 @@ export default function Discover(){
   const [expanded,setExpanded]=useState<Record<string,boolean>>({});
   const [failedPhotos,setFailedPhotos]=useState<Record<string,boolean>>({});
   const [photoAuthToken,setPhotoAuthToken]=useState<string|null>(null);
+  const [matchMoment,setMatchMoment]=useState<MatchMoment|null>(null);
+  const [choiceMessage,setChoiceMessage]=useState('');
+  const [actingUid,setActingUid]=useState<string|null>(null);
 
   const {colors}=useAppTheme();
 
@@ -89,7 +104,8 @@ export default function Discover(){
     try{
       setBusy(true);
       setErr('');
-      setD(await api<D>('/api/discovery'));
+      const result=await api<D>('/api/discovery');
+      setD(result);
     }catch(e){
       setErr(e instanceof Error?e.message:'Unable to load Discovery');
     }finally{
@@ -104,10 +120,16 @@ export default function Discover(){
   );
 
   async function act(uid:string,action:string){
+    if(actingUid)return;
+
+    const candidate=d?.candidates.find(c=>c.uid===uid);
+
     try{
       setErr('');
+      setChoiceMessage('');
+      setActingUid(uid);
 
-      await api('/api/interests',{
+      const result=await api<InterestResponse>('/api/interests',{
         method:'POST',
         body:JSON.stringify({
           toUid:uid,
@@ -123,8 +145,29 @@ export default function Discover(){
             }
           :current
       );
+
+      if(action==='interested'){
+        if(
+          result.matched &&
+          result.matchId &&
+          candidate
+        ){
+          setMatchMoment({
+            candidate,
+            matchId:result.matchId
+          });
+        }else{
+          setChoiceMessage(
+            'Interest sent privately. You’ll only be introduced if the interest becomes mutual.'
+          );
+        }
+      }else if(action==='saved'){
+        setChoiceMessage('Saved privately for later.');
+      }
     }catch(e){
       setErr(e instanceof Error?e.message:'Unable to save choice');
+    }finally{
+      setActingUid(null);
     }
   }
 
@@ -179,12 +222,190 @@ export default function Discover(){
             tintColor={colors.blue}
           />
         }
-        contentContainerStyle={{
-          gap:14,
-          paddingBottom:110
-        }}
-        keyboardShouldPersistTaps="handled"
+
       >
+        {choiceMessage?(
+          <Pressable
+            onPress={()=>setChoiceMessage('')}
+            style={{
+              backgroundColor:colors.card,
+              borderColor:colors.line,
+              borderWidth:1,
+              borderRadius:14,
+              padding:12,
+              marginBottom:12
+            }}
+          >
+            <Text
+              style={{
+                color:colors.ink,
+                fontSize:13,
+                lineHeight:19,
+                fontWeight:'700'
+              }}
+            >
+              {choiceMessage}
+            </Text>
+          </Pressable>
+        ):null}
+
+        <Modal
+          visible={Boolean(matchMoment)}
+          transparent
+          animationType="fade"
+          onRequestClose={()=>setMatchMoment(null)}
+        >
+          <View
+            style={{
+              flex:1,
+              backgroundColor:'rgba(0,0,0,0.72)',
+              justifyContent:'center',
+              padding:24
+            }}
+          >
+            <View
+              style={{
+                backgroundColor:colors.card,
+                borderRadius:28,
+                padding:24,
+                gap:16,
+                borderWidth:1,
+                borderColor:colors.line
+              }}
+            >
+              <View style={{alignItems:'center',gap:8}}>
+                <Text
+                  style={{
+                    color:colors.blue,
+                    fontSize:12,
+                    fontWeight:'900',
+                    letterSpacing:1.2
+                  }}
+                >
+                  MUTUAL INTRODUCTION
+                </Text>
+
+                <Text
+                  style={{
+                    color:colors.ink,
+                    fontSize:30,
+                    fontWeight:'900',
+                    textAlign:'center'
+                  }}
+                >
+                  You matched ♥
+                </Text>
+
+                <Text
+                  style={{
+                    color:colors.muted,
+                    fontSize:15,
+                    lineHeight:21,
+                    textAlign:'center'
+                  }}
+                >
+                  You and {matchMoment?.candidate.firstName ?? 'this person'} independently chose each other.
+                </Text>
+              </View>
+
+              {matchMoment?(
+                <View
+                  style={{
+                    alignItems:'center',
+                    gap:10,
+                    paddingVertical:8
+                  }}
+                >
+                  {failedPhotos[matchMoment.candidate.uid]?(
+                    <View
+                      style={{
+                        width:112,
+                        height:112,
+                        borderRadius:56,
+                        backgroundColor:colors.photo,
+                        alignItems:'center',
+                        justifyContent:'center'
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color:colors.ink,
+                          fontSize:42,
+                          fontWeight:'900'
+                        }}
+                      >
+                        {matchMoment.candidate.firstName?.[0]?.toUpperCase() ?? '?'}
+                      </Text>
+                    </View>
+                  ):(
+                    <Image
+                      source={{
+                        uri:profilePhoto(matchMoment.candidate.uid),
+                        headers:photoAuthToken
+                          ?{Authorization:`Bearer ${photoAuthToken}`}
+                          :undefined
+                      }}
+                      onError={()=>
+                        setFailedPhotos(current=>({
+                          ...current,
+                          [matchMoment.candidate.uid]:true
+                        }))
+                      }
+                      style={{
+                        width:112,
+                        height:112,
+                        borderRadius:56,
+                        backgroundColor:colors.photo
+                      }}
+                    />
+                  )}
+
+                  <Text
+                    style={{
+                      color:colors.ink,
+                      fontSize:21,
+                      fontWeight:'900'
+                    }}
+                  >
+                    {matchMoment.candidate.firstName}
+                    {matchMoment.candidate.age
+                      ?`, ${matchMoment.candidate.age}`
+                      :''}
+                  </Text>
+                </View>
+              ):null}
+
+              <Button
+                title="Start conversation"
+                onPress={()=>{
+                  const matchId=matchMoment?.matchId;
+                  setMatchMoment(null);
+
+                  if(matchId){
+                    router.push(`/chat/${matchId}` as any);
+                  }
+                }}
+              />
+
+              <Button
+                title="Keep discovering"
+                secondary
+                onPress={()=>setMatchMoment(null)}
+              />
+
+              <Text
+                style={{
+                  color:colors.muted,
+                  fontSize:11,
+                  lineHeight:16,
+                  textAlign:'center'
+                }}
+              >
+                Your connection is private. Messaging is available because the interest was mutual.
+              </Text>
+            </View>
+          </View>
+        </Modal>
         <View style={{
           flexDirection:'row',
           alignItems:'center',
@@ -622,7 +843,8 @@ export default function Discover(){
             ):null}
 
             <Button
-              title="Interested ♥"
+              title={actingUid===c.uid?'Sending...':'Interested ♥'}
+              disabled={Boolean(actingUid)}
               onPress={()=>act(c.uid,'interested')}
             />
 

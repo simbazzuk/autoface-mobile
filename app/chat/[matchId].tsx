@@ -7,6 +7,7 @@ import {
   Platform,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   View
@@ -52,6 +53,30 @@ type Conversation={
   other:Other;
   messages:Message[];
   messaging:Messaging;
+};
+
+type AtlasCoachStatus={
+  enabled:boolean;
+  viewerOptIn:boolean;
+  otherOptIn:boolean;
+  available:boolean;
+};
+
+type AtlasCoachStarter={
+  theme:string;
+  question:string;
+  basis:'shared_theme'|'discussion_point';
+};
+
+type AtlasCoachResult={
+  intro:string;
+  starters:AtlasCoachStarter[];
+};
+
+type AtlasCoachResponse={
+  coach:AtlasCoachResult;
+  persisted?:boolean;
+  notice?:string;
 };
 
 const QUICK_REPLIES=[
@@ -152,6 +177,12 @@ export default function Chat(){
   const [coachOpen,setCoachOpen]=useState(false);
   const [coachRound,setCoachRound]=useState(0);
 
+  const [coachStatus,setCoachStatus]=useState<AtlasCoachStatus|null>(null);
+  const [coach,setCoach]=useState<AtlasCoachResult|null>(null);
+  const [coachBusy,setCoachBusy]=useState(false);
+  const [coachConsent,setCoachConsent]=useState(false);
+  const [coachError,setCoachError]=useState('');
+
   const list=useRef<FlatList<{message:Message;showDay:boolean}>>(null);
   const mounted=useRef(true);
 
@@ -234,6 +265,27 @@ export default function Chat(){
 
   const messages=data?.messages??[];
 
+  useEffect(()=>{
+    let active=true;
+
+    if(!matchId){
+      setCoachStatus(null);
+      return()=>{active=false;};
+    }
+
+    void api<AtlasCoachStatus>(
+      `/api/atlas-ai/introduction-coach?matchId=${encodeURIComponent(matchId)}`
+    )
+      .then(status=>{
+        if(active)setCoachStatus(status);
+      })
+      .catch(()=>{
+        if(active)setCoachStatus(null);
+      });
+
+    return()=>{active=false;};
+  },[matchId]);
+
   const atlasSuggestions=useMemo(()=>{
     const name=data?.other.firstName?.trim()||'your connection';
     const score=data?.other.compatibilityScore;
@@ -300,6 +352,51 @@ export default function Chat(){
       ()=>list.current?.scrollToEnd({animated:true}),
       100
     );
+  }
+
+  async function generateAtlasCoach(){
+    if(!matchId||!coachConsent||coachBusy)return;
+
+    try{
+      setCoachBusy(true);
+      setCoachError('');
+
+      const response=await api<AtlasCoachResponse>(
+        '/api/atlas-ai/introduction-coach',
+        {
+          method:'POST',
+          body:JSON.stringify({
+            matchId,
+            consent:true
+          })
+        }
+      );
+
+      if(!response.coach?.starters?.length){
+        throw new Error('ATLAS_AI_INVALID_STARTERS');
+      }
+
+      setCoach(response.coach);
+    }catch(e){
+      const raw=e instanceof Error
+        ?e.message
+        :'Unable to generate conversation starters.';
+
+      setCoachError(
+        raw==='ATLAS_AI_TIMEOUT'||/operation was aborted/i.test(raw)
+          ?'Atlas is taking longer than expected. Please try again.'
+          :raw.startsWith('ATLAS_AI_INVALID_')||
+             raw==='ATLAS_AI_EMPTY_RESPONSE'
+            ?'Atlas could not create a valid set of conversation starters. Please try again.'
+            :raw==='BOTH_AI_OPT_INS_REQUIRED'
+              ?'Atlas AI conversation suggestions require both members to have AI Discovery enabled.'
+              :raw==='AI_CONSENT_REQUIRED'
+                ?'Atlas needs your permission before generating AI conversation suggestions.'
+                :raw
+      );
+    }finally{
+      setCoachBusy(false);
+    }
   }
 
   const rendered=useMemo(
@@ -877,15 +974,21 @@ export default function Chat(){
               </Pressable>
 
               {coachOpen?(
-                <View
+                <ScrollView
                   style={{
                     marginTop:10,
-                    padding:14,
+                    maxHeight:360,
                     borderRadius:18,
                     borderWidth:1,
                     borderColor:colors.line,
                     backgroundColor:colors.card
                   }}
+                  contentContainerStyle={{
+                    padding:14
+                  }}
+                  nestedScrollEnabled
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator
                 >
                   <Text
                     style={{
@@ -903,65 +1006,347 @@ export default function Chat(){
                       color:colors.muted,
                       fontSize:12,
                       marginTop:4,
-                      marginBottom:12
+                      marginBottom:12,
+                      lineHeight:17
                     }}
                   >
                     Private suggestions — only you can see these.
+                    Nothing is sent until you choose and send it yourself.
                   </Text>
 
-                  {atlasSuggestions.map(item=>(
-                    <Pressable
-                      key={`${item.label}-${item.text}`}
-                      onPress={()=>useAtlasSuggestion(item.text)}
-                      style={{
-                        paddingVertical:11,
-                        borderTopWidth:1,
-                        borderTopColor:colors.line
-                      }}
-                    >
+                  {coachStatus?.available?(
+                    coach?(
+                      <View>
+                        <Text
+                          style={{
+                            color:colors.text,
+                            fontSize:13,
+                            lineHeight:19,
+                            fontWeight:'600',
+                            marginBottom:5
+                          }}
+                        >
+                          {coach.intro}
+                        </Text>
+
+                        {coach.starters.map((item,index)=>(
+                          <Pressable
+                            key={`${item.theme}-${index}`}
+                            onPress={()=>useAtlasSuggestion(item.question)}
+                            style={{
+                              paddingVertical:11,
+                              borderTopWidth:1,
+                              borderTopColor:colors.line
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color:colors.blue,
+                                fontSize:10,
+                                fontWeight:'900',
+                                marginBottom:2
+                              }}
+                            >
+                              {item.basis==='discussion_point'
+                                ?'WORTH EXPLORING'
+                                :'SHARED THEME'}
+                            </Text>
+
+                            <Text
+                              style={{
+                                color:colors.muted,
+                                fontSize:11,
+                                fontWeight:'800',
+                                marginBottom:4
+                              }}
+                            >
+                              {item.theme}
+                            </Text>
+
+                            <Text
+                              style={{
+                                color:colors.text,
+                                fontSize:14,
+                                lineHeight:20,
+                                fontWeight:'600'
+                              }}
+                            >
+                              “{item.question}”
+                            </Text>
+                          </Pressable>
+                        ))}
+
+                        <Pressable
+                          disabled={coachBusy}
+                          onPress={()=>void generateAtlasCoach()}
+                          style={{
+                            alignSelf:'flex-start',
+                            marginTop:10,
+                            paddingVertical:5
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color:colors.blue,
+                              fontWeight:'800',
+                              fontSize:12,
+                              opacity:coachBusy?.6:1
+                            }}
+                          >
+                            {coachBusy
+                              ?'Atlas is thinking…'
+                              :'↻ Show me another set'}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    ):(
+                      <View>
+                        <Pressable
+                          onPress={()=>setCoachConsent(value=>!value)}
+                          style={{
+                            flexDirection:'row',
+                            alignItems:'flex-start',
+                            gap:10,
+                            paddingVertical:6
+                          }}
+                        >
+                          <View
+                            style={{
+                              width:20,
+                              height:20,
+                              borderRadius:5,
+                              borderWidth:1,
+                              borderColor:coachConsent
+                                ?colors.blue
+                                :colors.line,
+                              backgroundColor:coachConsent
+                                ?colors.blue
+                                :'transparent',
+                              alignItems:'center',
+                              justifyContent:'center'
+                            }}
+                          >
+                            {coachConsent?(
+                              <Text
+                                style={{
+                                  color:'#fff',
+                                  fontWeight:'900',
+                                  fontSize:12
+                                }}
+                              >
+                                ✓
+                              </Text>
+                            ):null}
+                          </View>
+
+                          <View style={{flex:1}}>
+                            <Text
+                              style={{
+                                color:colors.text,
+                                fontWeight:'800',
+                                fontSize:13
+                              }}
+                            >
+                              Generate personalised starters with Atlas AI
+                            </Text>
+
+                            <Text
+                              style={{
+                                color:colors.muted,
+                                fontSize:11,
+                                lineHeight:16,
+                                marginTop:3
+                              }}
+                            >
+                              Both members have opted in. Atlas uses your
+                              relationship themes to create editable ideas.
+                            </Text>
+                          </View>
+                        </Pressable>
+
+                        <Pressable
+                          disabled={!coachConsent||coachBusy}
+                          onPress={()=>void generateAtlasCoach()}
+                          style={{
+                            marginTop:10,
+                            paddingHorizontal:14,
+                            paddingVertical:10,
+                            borderRadius:18,
+                            alignSelf:'flex-start',
+                            backgroundColor:colors.blue,
+                            opacity:!coachConsent||coachBusy?.5:1
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color:'#fff',
+                              fontWeight:'900',
+                              fontSize:12
+                            }}
+                          >
+                            {coachBusy
+                              ?'Atlas is thinking…'
+                              :'Suggest conversation starters'}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    )
+                  ):coachStatus&&!coachStatus.enabled?(
+                    <View>
                       <Text
                         style={{
-                          color:colors.blue,
-                          fontSize:11,
-                          fontWeight:'800',
-                          marginBottom:4
+                          color:colors.muted,
+                          fontSize:12,
+                          lineHeight:17,
+                          marginBottom:8
                         }}
                       >
-                        {item.label}
+                        Atlas AI is currently unavailable. Here are some
+                        private conversation ideas instead.
                       </Text>
 
-                      <Text
+                      {atlasSuggestions.map(item=>(
+                        <Pressable
+                          key={`${item.label}-${item.text}`}
+                          onPress={()=>useAtlasSuggestion(item.text)}
+                          style={{
+                            paddingVertical:11,
+                            borderTopWidth:1,
+                            borderTopColor:colors.line
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color:colors.blue,
+                              fontSize:11,
+                              fontWeight:'800',
+                              marginBottom:4
+                            }}
+                          >
+                            {item.label}
+                          </Text>
+
+                          <Text
+                            style={{
+                              color:colors.text,
+                              fontSize:14,
+                              lineHeight:20,
+                              fontWeight:'600'
+                            }}
+                          >
+                            “{item.text}”
+                          </Text>
+                        </Pressable>
+                      ))}
+
+                      <Pressable
+                        onPress={()=>setCoachRound(round=>round+1)}
                         style={{
-                          color:colors.text,
-                          fontSize:14,
-                          lineHeight:20,
-                          fontWeight:'600'
+                          alignSelf:'flex-start',
+                          marginTop:10,
+                          paddingVertical:5
                         }}
                       >
-                        “{item.text}”
-                      </Text>
-                    </Pressable>
-                  ))}
-
-                  <Pressable
-                    onPress={()=>setCoachRound(round=>round+1)}
-                    style={{
-                      alignSelf:'flex-start',
-                      marginTop:10,
-                      paddingVertical:5
-                    }}
-                  >
+                        <Text
+                          style={{
+                            color:colors.blue,
+                            fontWeight:'800',
+                            fontSize:12
+                          }}
+                        >
+                          ↻ Refresh ideas
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ):coachStatus&&!coachStatus.viewerOptIn?(
                     <Text
                       style={{
-                        color:colors.blue,
-                        fontWeight:'800',
-                        fontSize:12
+                        color:colors.muted,
+                        fontSize:12,
+                        lineHeight:17
                       }}
                     >
-                      ↻ Refresh ideas
+                      Enable optional AI Discovery in your Atlas Profile
+                      for personalised Atlas conversation suggestions.
                     </Text>
-                  </Pressable>
-                </View>
+                  ):coachStatus&&!coachStatus.otherOptIn?(
+                    <View>
+                      <Text
+                        style={{
+                          color:colors.muted,
+                          fontSize:12,
+                          lineHeight:17
+                        }}
+                      >
+                        Personalised Atlas AI suggestions are unavailable
+                        because {personName} has not opted in to AI Discovery.
+                      </Text>
+
+
+                    </View>
+                  ):(
+                    <View>
+                      <Text
+                        style={{
+                          color:colors.muted,
+                          fontSize:12,
+                          lineHeight:17,
+                          marginBottom:8
+                        }}
+                      >
+                        Personalised Atlas AI is unavailable right now.
+                        You can still use these private conversation ideas.
+                      </Text>
+
+                      {atlasSuggestions.map(item=>(
+                        <Pressable
+                          key={`${item.label}-${item.text}`}
+                          onPress={()=>useAtlasSuggestion(item.text)}
+                          style={{
+                            paddingVertical:11,
+                            borderTopWidth:1,
+                            borderTopColor:colors.line
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color:colors.blue,
+                              fontSize:11,
+                              fontWeight:'800',
+                              marginBottom:4
+                            }}
+                          >
+                            {item.label}
+                          </Text>
+
+                          <Text
+                            style={{
+                              color:colors.text,
+                              fontSize:14,
+                              lineHeight:20,
+                              fontWeight:'600'
+                            }}
+                          >
+                            “{item.text}”
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  )}
+
+                  {coachError?(
+                    <Text
+                      style={{
+                        color:colors.rose,
+                        fontSize:12,
+                        lineHeight:17,
+                        marginTop:10
+                      }}
+                    >
+                      {coachError}
+                    </Text>
+                  ):null}
+                </ScrollView>
               ):null}
             </View>
 

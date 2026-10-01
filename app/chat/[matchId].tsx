@@ -148,6 +148,10 @@ export default function Chat(){
   const [sending,setSending]=useState(false);
   const [photoAuthToken,setPhotoAuthToken]=useState<string|null>(null);
 
+  // AutoFace 0.1.20 - Atlas Conversation Coach
+  const [coachOpen,setCoachOpen]=useState(false);
+  const [coachRound,setCoachRound]=useState(0);
+
   const list=useRef<FlatList<{message:Message;showDay:boolean}>>(null);
   const mounted=useRef(true);
 
@@ -229,6 +233,74 @@ export default function Chat(){
   },[matchId,data?.messages?.length]);
 
   const messages=data?.messages??[];
+
+  const atlasSuggestions=useMemo(()=>{
+    const name=data?.other.firstName?.trim()||'your connection';
+    const score=data?.other.compatibilityScore;
+
+    const rounds=[
+      [
+        {
+          label:'Break the ice',
+          text:'What are you looking forward to this weekend?'
+        },
+        {
+          label:'Go a little deeper',
+          text:"What's something you could talk about for hours?"
+        },
+        {
+          label:'Use your connection',
+          text:score!=null
+            ?`Atlas says we have ${score}% compatibility — what do you think we'd get along best over?`
+            :"What do you think we'd get along best over?"
+        }
+      ],
+      [
+        {
+          label:'Keep it natural',
+          text:"What's been the best part of your week so far?"
+        },
+        {
+          label:'Discover more',
+          text:"What's something you've always wanted to try?"
+        },
+        {
+          label:`Ask ${name}`,
+          text:"What's your idea of a really good first date?"
+        }
+      ],
+      [
+        {
+          label:'Something fun',
+          text:'Quick one — spontaneous weekend away or perfectly planned trip?'
+        },
+        {
+          label:'Find common ground',
+          text:'What do you usually enjoy doing when you get a completely free day?'
+        },
+        {
+          label:'A little deeper',
+          text:"What's something that's really important to you in a relationship?"
+        }
+      ]
+    ];
+
+    return rounds[coachRound%rounds.length];
+  },[
+    coachRound,
+    data?.other.firstName,
+    data?.other.compatibilityScore
+  ]);
+
+  function useAtlasSuggestion(suggestion:string){
+    setValue(suggestion);
+    setCoachOpen(false);
+
+    setTimeout(
+      ()=>list.current?.scrollToEnd({animated:true}),
+      100
+    );
+  }
 
   const rendered=useMemo(
     ()=>messages.map((m,i)=>({
@@ -780,6 +852,119 @@ export default function Chat(){
               }
             ]}
           >
+            <View style={{marginBottom:12}}>
+              <Pressable
+                onPress={()=>setCoachOpen(open=>!open)}
+                style={{
+                  alignSelf:'flex-start',
+                  paddingHorizontal:14,
+                  paddingVertical:9,
+                  borderRadius:18,
+                  borderWidth:1,
+                  borderColor:colors.blue,
+                  backgroundColor:colors.card
+                }}
+              >
+                <Text
+                  style={{
+                    color:colors.blue,
+                    fontWeight:'800',
+                    fontSize:13
+                  }}
+                >
+                  ✦ {coachOpen?'Hide Atlas':'Ask Atlas'}
+                </Text>
+              </Pressable>
+
+              {coachOpen?(
+                <View
+                  style={{
+                    marginTop:10,
+                    padding:14,
+                    borderRadius:18,
+                    borderWidth:1,
+                    borderColor:colors.line,
+                    backgroundColor:colors.card
+                  }}
+                >
+                  <Text
+                    style={{
+                      color:colors.blue,
+                      fontWeight:'900',
+                      fontSize:12,
+                      letterSpacing:.6
+                    }}
+                  >
+                    ✦ ATLAS CONVERSATION COACH
+                  </Text>
+
+                  <Text
+                    style={{
+                      color:colors.muted,
+                      fontSize:12,
+                      marginTop:4,
+                      marginBottom:12
+                    }}
+                  >
+                    Private suggestions — only you can see these.
+                  </Text>
+
+                  {atlasSuggestions.map(item=>(
+                    <Pressable
+                      key={`${item.label}-${item.text}`}
+                      onPress={()=>useAtlasSuggestion(item.text)}
+                      style={{
+                        paddingVertical:11,
+                        borderTopWidth:1,
+                        borderTopColor:colors.line
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color:colors.blue,
+                          fontSize:11,
+                          fontWeight:'800',
+                          marginBottom:4
+                        }}
+                      >
+                        {item.label}
+                      </Text>
+
+                      <Text
+                        style={{
+                          color:colors.text,
+                          fontSize:14,
+                          lineHeight:20,
+                          fontWeight:'600'
+                        }}
+                      >
+                        “{item.text}”
+                      </Text>
+                    </Pressable>
+                  ))}
+
+                  <Pressable
+                    onPress={()=>setCoachRound(round=>round+1)}
+                    style={{
+                      alignSelf:'flex-start',
+                      marginTop:10,
+                      paddingVertical:5
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color:colors.blue,
+                        fontWeight:'800',
+                        fontSize:12
+                      }}
+                    >
+                      ↻ Refresh ideas
+                    </Text>
+                  </Pressable>
+                </View>
+              ):null}
+            </View>
+
             {!data?.messaging.unlimited&&
              data?.messaging.remaining!=null?(
               <Text

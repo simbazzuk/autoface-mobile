@@ -2,14 +2,14 @@
   "expo": {
     "name": "AutoFace",
     "slug": "autoface-mobile",
-    "version": "0.1.17",
+    "version": "0.1.20",
     "orientation": "portrait",
     "scheme": "autoface",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "chat.mip.autoface",
-      "buildNumber": "36",
+      "buildNumber": "39",
       "infoPlist": {
         "NSCameraUsageDescription": "AutoFace uses the camera for profile and authenticity verification.",
         "NSPhotoLibraryUsageDescription": "AutoFace uses your photo library so you can choose a profile photo.",

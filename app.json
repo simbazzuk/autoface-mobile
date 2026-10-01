@@ -52,8 +52,4 @@
     },
     "icon": "./assets/autoface-icon.png"
   },
-  "version": "0.1.19",
-  "ios": {
-    "buildNumber": "38"
-  }
 }

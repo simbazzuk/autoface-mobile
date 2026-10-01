@@ -1,5 +1,16 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
-import {AppState,FlatList,Image,KeyboardAvoidingView,Platform,Pressable,RefreshControl,StyleSheet,Text,View} from 'react-native';
+import {
+  AppState,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View
+} from 'react-native';
 import {router,useFocusEffect,useLocalSearchParams} from 'expo-router';
 import {api,profilePhoto} from '@/src/lib/api';
 import {Body,Button,Input,Loading,Screen} from '@/src/components/UI';
@@ -7,34 +18,1056 @@ import {useAppTheme} from '@/src/context/Theme';
 import {useAuth} from '@/src/context/Auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type Message={id:string;senderUid:string;text:string;createdAt?:string|null;pending?:boolean;failed?:boolean};
-type Other={uid:string;firstName?:string;authenticityScore?:number;compatibilityScore?:number};
-type Messaging={unlimited:boolean;freeLimit:number;sentCount:number;remaining:number|null;locked:boolean;contactDetailSharing?:boolean};
-type Conversation={matchId:string;other:Other;messages:Message[];messaging:Messaging};
+type Message={
+  id:string;
+  senderUid:string;
+  text:string;
+  createdAt?:string|null;
+  pending?:boolean;
+  failed?:boolean;
+};
 
-const QUICK_REPLIES=['Hi! Nice to meet you','How has your day been?','What made you smile today?'];
-function dayLabel(value?:string|null){if(!value)return '';const d=new Date(value);const today=new Date();const yesterday=new Date();yesterday.setDate(today.getDate()-1);if(d.toDateString()===today.toDateString())return 'Today';if(d.toDateString()===yesterday.toDateString())return 'Yesterday';return d.toLocaleDateString([],{day:'numeric',month:'short',year:d.getFullYear()===today.getFullYear()?undefined:'numeric'});}
+type Other={
+  uid:string;
+  firstName?:string;
+  age?:number|null;
+  generalLocation?:string|null;
+  occupation?:string|null;
+  authenticityScore?:number;
+  compatibilityScore?:number;
+  faceVerified?:boolean;
+};
+
+type Messaging={
+  unlimited:boolean;
+  freeLimit:number;
+  sentCount:number;
+  remaining:number|null;
+  locked:boolean;
+  contactDetailSharing?:boolean;
+};
+
+type Conversation={
+  matchId:string;
+  other:Other;
+  messages:Message[];
+  messaging:Messaging;
+};
+
+const QUICK_REPLIES=[
+  'Hi! Nice to meet you',
+  'How has your day been?',
+  'What made you smile today?'
+];
+
+function dayLabel(value?:string|null){
+  if(!value)return '';
+
+  const d=new Date(value);
+  const today=new Date();
+  const yesterday=new Date();
+
+  yesterday.setDate(today.getDate()-1);
+
+  if(d.toDateString()===today.toDateString())return 'Today';
+  if(d.toDateString()===yesterday.toDateString())return 'Yesterday';
+
+  return d.toLocaleDateString([],{
+    day:'numeric',
+    month:'short',
+    year:d.getFullYear()===today.getFullYear()?undefined:'numeric'
+  });
+}
+
+function ConnectionPhoto({
+  person,
+  token
+}:{
+  person:Other;
+  token:string|null;
+}){
+  const {colors}=useAppTheme();
+  const [failed,setFailed]=useState(false);
+
+  const initial=(person.firstName||'?')
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
+  if(failed){
+    return(
+      <View
+        style={[
+          s.avatarFallback,
+          {backgroundColor:colors.photo}
+        ]}
+      >
+        <Text
+          style={[
+            s.avatarInitial,
+            {color:colors.ink}
+          ]}
+        >
+          {initial}
+        </Text>
+      </View>
+    );
+  }
+
+  return(
+    <Image
+      source={{
+        uri:profilePhoto(person.uid),
+        headers:token
+          ?{Authorization:`Bearer ${token}`}
+          :undefined
+      }}
+      style={[
+        s.avatar,
+        {backgroundColor:colors.photo}
+      ]}
+      onError={()=>setFailed(true)}
+    />
+  );
+}
 
 export default function Chat(){
- const params=useLocalSearchParams<{matchId:string|string[]}>();const matchId=Array.isArray(params.matchId)?params.matchId[0]:params.matchId;
- const {colors}=useAppTheme();const {user}=useAuth();
- const [data,setData]=useState<Conversation|null>(null),[value,setValue]=useState(''),[err,setErr]=useState(''),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[sending,setSending]=useState(false);
- const list=useRef<FlatList<{message:Message;showDay:boolean}>>(null);const mounted=useRef(true);
- const load=useCallback(async(silent=false)=>{if(!matchId)return;try{if(!silent)setErr('');const next=await api<Conversation>(`/api/messages?matchId=${encodeURIComponent(matchId)}`);if(mounted.current)setData(next)}catch(e){if(!silent&&mounted.current)setErr(e instanceof Error?e.message:'Unable to load messages')}finally{if(mounted.current){setLoading(false);setRefreshing(false)}}},[matchId]);
- useEffect(()=>()=>{mounted.current=false},[]);
- useFocusEffect(useCallback(()=>{mounted.current=true;void load();const timer=setInterval(()=>{if(AppState.currentState==='active')void load(true)},5000);return()=>clearInterval(timer)},[load]));
- useEffect(()=>{if(matchId&&data)void AsyncStorage.setItem(`autoface:last-opened:${matchId}`,new Date().toISOString())},[matchId,data?.messages?.length]);
- const messages=data?.messages??[];
- const rendered=useMemo(()=>messages.map((m,i)=>({message:m,showDay:i===0||dayLabel(messages[i-1]?.createdAt)!==dayLabel(m.createdAt)})),[messages]);
- async function refresh(){setRefreshing(true);await load()}
- async function send(prefill?:string){const text=(prefill??value).trim();if(!text||!matchId||sending||data?.messaging.locked)return;const tempId=`pending-${Date.now()}`;const optimistic:Message={id:tempId,senderUid:user?.uid??'',text,createdAt:new Date().toISOString(),pending:true};setData(current=>current?{...current,messages:[...current.messages,optimistic]}:current);setValue('');setTimeout(()=>list.current?.scrollToEnd({animated:true}),30);try{setSending(true);setErr('');await api('/api/messages',{method:'POST',body:JSON.stringify({matchId,text,message:text})});await load(true)}catch(e){const raw=e instanceof Error?e.message:'Unable to send';setData(current=>current?{...current,messages:current.messages.map(m=>m.id===tempId?{...m,pending:false,failed:true}:m)}:current);setErr(raw==='MESSAGE_LIMIT_REACHED'?'You have used your free message allowance. You can still read this conversation.':raw==='CONTACT_DETAILS_MEMBERSHIP_REQUIRED'?'Contact details can be shared once messaging is unlocked.':raw)}finally{setSending(false)}}
- if(loading)return <Screen eyebrow="PRIVATE CONNECTION" title="Conversation"><Loading/></Screen>;
- return <Screen eyebrow="PRIVATE CONNECTION" title={data?.other?.firstName?`Chat with ${data.other.firstName}`:'Conversation'}><KeyboardAvoidingView style={s.flex} behavior={Platform.OS==='ios'?'padding':undefined} keyboardVerticalOffset={8}>
-  <Pressable onPress={()=>router.back()} hitSlop={10}><Text style={[s.back,{color:colors.blue}]}>{'< Back'}</Text></Pressable>
-  {data?<View style={[s.person,{borderColor:colors.line,backgroundColor:colors.card}]}><Image source={{uri:profilePhoto(data.other.uid)}} style={[s.avatar,{backgroundColor:colors.photo}]}/><View style={s.personCopy}><Text style={[s.personName,{color:colors.text}]}>{data.other.firstName||'Your connection'}</Text><Text style={[s.small,{color:colors.muted}]}>Mutual introduction · private conversation</Text></View></View>:null}
-  {data?<View style={[s.trust,{borderColor:colors.line,backgroundColor:colors.card}]}><View><Text style={[s.trustValue,{color:colors.ink}]}>{data.other.authenticityScore??'-'}%</Text><Text style={[s.small,{color:colors.muted}]}>Authenticity</Text></View><View><Text style={[s.trustValue,{color:colors.ink}]}>{data.other.compatibilityScore??'-'}%</Text><Text style={[s.small,{color:colors.muted}]}>Compatibility</Text></View><View style={s.entitlement}><Text style={[s.small,{color:data.messaging.locked?colors.rose:colors.green}]}>{data.messaging.unlimited?'Unlimited chat':data.messaging.locked?'Messaging paused':`${data.messaging.remaining??0} free left`}</Text></View></View>:null}
-  {err?<View style={[s.errorBox,{borderColor:colors.line,backgroundColor:colors.card}]}><Text style={[s.error,{color:colors.rose}]}>{err}</Text><Pressable onPress={()=>void load()}><Text style={{color:colors.blue,fontWeight:'800'}}>Retry</Text></Pressable></View>:null}
-  <FlatList ref={list} data={rendered} keyExtractor={(x)=>x.message.id} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh}/>} contentContainerStyle={s.list} keyboardShouldPersistTaps="handled" onContentSizeChange={()=>list.current?.scrollToEnd({animated:false})} ListEmptyComponent={<View style={s.empty}><Body>You both chose to be introduced. A simple hello is enough.</Body><View style={s.quickWrap}>{QUICK_REPLIES.map(x=><Pressable key={x} onPress={()=>void send(x)} style={[s.quick,{borderColor:colors.line,backgroundColor:colors.card}]}><Text style={{color:colors.text,fontWeight:'700'}}>{x}</Text></Pressable>)}</View></View>} renderItem={({item})=>{const m=item.message;const mine=m.senderUid===user?.uid;return <View>{item.showDay&&m.createdAt?<View style={s.day}><Text style={[s.dayText,{color:colors.muted,backgroundColor:colors.bg}]}>{dayLabel(m.createdAt)}</Text></View>:null}<View style={[s.messageRow,mine?s.mine:s.theirs]}><View style={[s.bubble,{opacity:m.failed?.65:1,backgroundColor:mine?colors.blue:colors.card,borderColor:m.failed?colors.rose:(mine?colors.blue:colors.line)}]}><Text style={[s.message,{color:mine?'#fff':colors.text}]}>{m.text}</Text><View style={s.meta}>{m.createdAt?<Text style={[s.time,{color:mine?'#DBEAFE':colors.muted}]}>{new Date(m.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</Text>:null}{mine?<Text style={[s.time,{color:m.failed?'#FECACA':'#DBEAFE'}]}>{m.failed?'Failed':m.pending?'Sending...':'Sent'}</Text>:null}</View></View></View></View>}}/>
-  {data?.messaging.locked?<View style={[s.locked,{backgroundColor:colors.card,borderColor:colors.line}]}><Body>Messaging is paused. Your conversation remains available to read.</Body></View>:<View><View style={s.composer}><Input style={s.input} value={value} onChangeText={setValue} placeholder="Write a message..." multiline maxLength={1000}/><View style={s.send}><Button title={sending?'Sending...':'Send'} disabled={sending||!value.trim()} onPress={()=>void send()}/></View></View><Text style={[s.counter,{color:value.length>900?colors.rose:colors.muted}]}>{value.length}/1000</Text></View>}
- </KeyboardAvoidingView></Screen>}
-const s=StyleSheet.create({flex:{flex:1,gap:8},back:{fontSize:16,fontWeight:'700'},person:{borderWidth:1,borderRadius:16,padding:10,flexDirection:'row',alignItems:'center',gap:11},avatar:{width:46,height:46,borderRadius:23},personCopy:{flex:1},personName:{fontSize:17,fontWeight:'800'},trust:{borderWidth:1,borderRadius:16,padding:10,flexDirection:'row',alignItems:'center',gap:20},trustValue:{fontSize:17,fontWeight:'800'},small:{fontSize:11},entitlement:{marginLeft:'auto'},errorBox:{borderWidth:1,borderRadius:12,padding:10,flexDirection:'row',justifyContent:'space-between',alignItems:'center',gap:10},error:{fontSize:13,lineHeight:18,flex:1},list:{paddingVertical:8,gap:5,flexGrow:1},empty:{paddingVertical:28,gap:14},quickWrap:{gap:8},quick:{borderWidth:1,borderRadius:999,paddingVertical:9,paddingHorizontal:13,alignSelf:'flex-start'},day:{alignItems:'center',marginVertical:8},dayText:{fontSize:11,fontWeight:'700',paddingHorizontal:8},messageRow:{flexDirection:'row'},mine:{justifyContent:'flex-end'},theirs:{justifyContent:'flex-start'},bubble:{maxWidth:'82%',borderWidth:1,borderRadius:18,paddingHorizontal:14,paddingVertical:10},message:{fontSize:16,lineHeight:21},meta:{flexDirection:'row',justifyContent:'flex-end',gap:7,marginTop:4},time:{fontSize:10},composer:{flexDirection:'row',gap:8,alignItems:'flex-end',paddingTop:4},input:{flex:1,minHeight:48,maxHeight:110},send:{width:88},counter:{fontSize:10,textAlign:'right',marginTop:2,marginRight:96},locked:{borderWidth:1,borderRadius:14,padding:12}});
+  const params=useLocalSearchParams<{matchId:string|string[]}>();
+  const matchId=Array.isArray(params.matchId)
+    ?params.matchId[0]
+    :params.matchId;
+
+  const {colors}=useAppTheme();
+  const {user}=useAuth();
+
+  const [data,setData]=useState<Conversation|null>(null);
+  const [value,setValue]=useState('');
+  const [err,setErr]=useState('');
+  const [loading,setLoading]=useState(true);
+  const [refreshing,setRefreshing]=useState(false);
+  const [sending,setSending]=useState(false);
+  const [photoAuthToken,setPhotoAuthToken]=useState<string|null>(null);
+
+  const list=useRef<FlatList<{message:Message;showDay:boolean}>>(null);
+  const mounted=useRef(true);
+
+  useEffect(()=>{
+    let active=true;
+
+    if(!user){
+      setPhotoAuthToken(null);
+      return()=>{active=false;};
+    }
+
+    void user.getIdToken()
+      .then(token=>{
+        if(active)setPhotoAuthToken(token);
+      })
+      .catch(()=>{
+        if(active)setPhotoAuthToken(null);
+      });
+
+    return()=>{active=false;};
+  },[user]);
+
+  const load=useCallback(async(silent=false)=>{
+    if(!matchId)return;
+
+    try{
+      if(!silent)setErr('');
+
+      const next=await api<Conversation>(
+        `/api/messages?matchId=${encodeURIComponent(matchId)}`
+      );
+
+      if(mounted.current)setData(next);
+    }catch(e){
+      if(!silent&&mounted.current){
+        setErr(
+          e instanceof Error
+            ?e.message
+            :'Unable to load messages'
+        );
+      }
+    }finally{
+      if(mounted.current){
+        setLoading(false);
+        setRefreshing(false);
+      }
+    }
+  },[matchId]);
+
+  useEffect(
+    ()=>()=>{
+      mounted.current=false;
+    },
+    []
+  );
+
+  useFocusEffect(
+    useCallback(()=>{
+      mounted.current=true;
+      void load();
+
+      const timer=setInterval(()=>{
+        if(AppState.currentState==='active'){
+          void load(true);
+        }
+      },5000);
+
+      return()=>clearInterval(timer);
+    },[load])
+  );
+
+  useEffect(()=>{
+    if(matchId&&data){
+      void AsyncStorage.setItem(
+        `autoface:last-opened:${matchId}`,
+        new Date().toISOString()
+      );
+    }
+  },[matchId,data?.messages?.length]);
+
+  const messages=data?.messages??[];
+
+  const rendered=useMemo(
+    ()=>messages.map((m,i)=>({
+      message:m,
+      showDay:
+        i===0||
+        dayLabel(messages[i-1]?.createdAt)!==dayLabel(m.createdAt)
+    })),
+    [messages]
+  );
+
+  async function refresh(){
+    setRefreshing(true);
+    await load();
+  }
+
+  async function send(prefill?:string){
+    const text=(prefill??value).trim();
+
+    if(
+      !text||
+      !matchId||
+      sending||
+      data?.messaging.locked
+    ){
+      return;
+    }
+
+    const tempId=`pending-${Date.now()}`;
+
+    const optimistic:Message={
+      id:tempId,
+      senderUid:user?.uid??'',
+      text,
+      createdAt:new Date().toISOString(),
+      pending:true
+    };
+
+    setData(current=>
+      current
+        ?{
+          ...current,
+          messages:[...current.messages,optimistic]
+        }
+        :current
+    );
+
+    setValue('');
+
+    setTimeout(
+      ()=>list.current?.scrollToEnd({animated:true}),
+      30
+    );
+
+    try{
+      setSending(true);
+      setErr('');
+
+      await api('/api/messages',{
+        method:'POST',
+        body:JSON.stringify({
+          matchId,
+          text,
+          message:text
+        })
+      });
+
+      await load(true);
+    }catch(e){
+      const raw=e instanceof Error
+        ?e.message
+        :'Unable to send';
+
+      setData(current=>
+        current
+          ?{
+            ...current,
+            messages:current.messages.map(m=>
+              m.id===tempId
+                ?{...m,pending:false,failed:true}
+                :m
+            )
+          }
+          :current
+      );
+
+      setErr(
+        raw==='MESSAGE_LIMIT_REACHED'
+          ?'You have used your free message allowance. You can still read this conversation.'
+          :raw==='CONTACT_DETAILS_MEMBERSHIP_REQUIRED'
+            ?'Contact details can be shared once messaging is unlocked.'
+            :raw
+      );
+    }finally{
+      setSending(false);
+    }
+  }
+
+  if(loading){
+    return(
+      <Screen
+        eyebrow="PRIVATE CONNECTION"
+        title="Conversation"
+      >
+        <Loading/>
+      </Screen>
+    );
+  }
+
+  const personName=data?.other?.firstName||'Your connection';
+
+  const personDetails=data
+    ?[
+      data.other.generalLocation,
+      data.other.occupation
+    ].filter(Boolean).join(' · ')
+    :'';
+
+  return(
+    <Screen
+      eyebrow="PRIVATE CONNECTION"
+      title={`Chat with ${personName}`}
+    >
+      <KeyboardAvoidingView
+        style={s.flex}
+        behavior={Platform.OS==='ios'?'padding':undefined}
+        keyboardVerticalOffset={8}
+      >
+        <Pressable
+          onPress={()=>router.back()}
+          hitSlop={10}
+        >
+          <Text
+            style={[
+              s.back,
+              {color:colors.blue}
+            ]}
+          >
+            {'‹ Connections'}
+          </Text>
+        </Pressable>
+
+        {data?(
+          <View
+            style={[
+              s.connectionCard,
+              {
+                borderColor:colors.line,
+                backgroundColor:colors.card
+              }
+            ]}
+          >
+            <View style={s.person}>
+              <View>
+                <ConnectionPhoto
+                  person={data.other}
+                  token={photoAuthToken}
+                />
+
+                {data.other.faceVerified?(
+                  <View
+                    style={[
+                      s.verifiedDot,
+                      {
+                        backgroundColor:colors.blue,
+                        borderColor:colors.card
+                      }
+                    ]}
+                  >
+                    <Text style={s.verifiedDotText}>✓</Text>
+                  </View>
+                ):null}
+              </View>
+
+              <View style={s.personCopy}>
+                <View style={s.nameRow}>
+                  <Text
+                    style={[
+                      s.personName,
+                      {color:colors.text}
+                    ]}
+                  >
+                    {personName}
+                    {data.other.age?`, ${data.other.age}`:''}
+                  </Text>
+
+                  {data.other.faceVerified?(
+                    <Text
+                      style={[
+                        s.blueCheck,
+                        {color:colors.blue}
+                      ]}
+                    >
+                      ✓
+                    </Text>
+                  ):null}
+                </View>
+
+                {personDetails?(
+                  <Text
+                    style={[
+                      s.personDetail,
+                      {color:colors.muted}
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {personDetails}
+                  </Text>
+                ):null}
+
+                <Text
+                  style={[
+                    s.privateLabel,
+                    {color:colors.muted}
+                  ]}
+                >
+                  Mutual connection · private conversation
+                </Text>
+
+                {data.other.faceVerified?(
+                  <Text
+                    style={[
+                      s.verifiedText,
+                      {color:colors.blue}
+                    ]}
+                  >
+                    ✓ Face Verified
+                  </Text>
+                ):null}
+              </View>
+            </View>
+
+            <View
+              style={[
+                s.divider,
+                {backgroundColor:colors.line}
+              ]}
+            />
+
+            <View style={s.trust}>
+              <View style={s.trustItem}>
+                <Text
+                  style={[
+                    s.trustValue,
+                    {color:colors.ink}
+                  ]}
+                >
+                  {data.other.compatibilityScore??'-'}%
+                </Text>
+                <Text
+                  style={[
+                    s.small,
+                    {color:colors.muted}
+                  ]}
+                >
+                  Atlas
+                </Text>
+              </View>
+
+              <View style={s.trustItem}>
+                <Text
+                  style={[
+                    s.trustValue,
+                    {color:colors.ink}
+                  ]}
+                >
+                  {data.other.authenticityScore??'-'}%
+                </Text>
+                <Text
+                  style={[
+                    s.small,
+                    {color:colors.muted}
+                  ]}
+                >
+                  Authenticity
+                </Text>
+              </View>
+
+              <View style={s.entitlement}>
+                <View
+                  style={[
+                    s.chatStatus,
+                    {
+                      backgroundColor:data.messaging.locked
+                        ?colors.photo
+                        :colors.blue
+                    }
+                  ]}
+                >
+                  <Text
+                    style={[
+                      s.chatStatusText,
+                      {
+                        color:data.messaging.locked
+                          ?colors.rose
+                          :'#fff'
+                      }
+                    ]}
+                  >
+                    {data.messaging.unlimited
+                      ?'Unlimited chat'
+                      :data.messaging.locked
+                        ?'Messaging paused'
+                        :`${data.messaging.remaining??0} free left`}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        ):null}
+
+        {err?(
+          <View
+            style={[
+              s.errorBox,
+              {
+                borderColor:colors.line,
+                backgroundColor:colors.card
+              }
+            ]}
+          >
+            <Text
+              style={[
+                s.error,
+                {color:colors.rose}
+              ]}
+            >
+              {err}
+            </Text>
+
+            <Pressable onPress={()=>void load()}>
+              <Text
+                style={{
+                  color:colors.blue,
+                  fontWeight:'800'
+                }}
+              >
+                Retry
+              </Text>
+            </Pressable>
+          </View>
+        ):null}
+
+        <FlatList
+          ref={list}
+          data={rendered}
+          keyExtractor={x=>x.message.id}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refresh}
+              tintColor={colors.blue}
+            />
+          }
+          contentContainerStyle={s.list}
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={()=>
+            list.current?.scrollToEnd({animated:false})
+          }
+          ListEmptyComponent={
+            <View style={s.empty}>
+              <View
+                style={[
+                  s.newConversation,
+                  {
+                    backgroundColor:colors.card,
+                    borderColor:colors.line
+                  }
+                ]}
+              >
+                <Text
+                  style={[
+                    s.newConversationTitle,
+                    {color:colors.ink}
+                  ]}
+                >
+                  Your conversation starts here
+                </Text>
+
+                <Body>
+                  You both chose to connect. A simple hello is enough.
+                </Body>
+              </View>
+
+              <Text
+                style={[
+                  s.quickTitle,
+                  {color:colors.muted}
+                ]}
+              >
+                Conversation starters
+              </Text>
+
+              <View style={s.quickWrap}>
+                {QUICK_REPLIES.map(x=>(
+                  <Pressable
+                    key={x}
+                    onPress={()=>void send(x)}
+                    style={[
+                      s.quick,
+                      {
+                        borderColor:colors.line,
+                        backgroundColor:colors.card
+                      }
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        color:colors.text,
+                        fontWeight:'700'
+                      }}
+                    >
+                      {x}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          }
+          renderItem={({item})=>{
+            const m=item.message;
+            const mine=m.senderUid===user?.uid;
+
+            return(
+              <View>
+                {item.showDay&&m.createdAt?(
+                  <View style={s.day}>
+                    <Text
+                      style={[
+                        s.dayText,
+                        {
+                          color:colors.muted,
+                          backgroundColor:colors.bg
+                        }
+                      ]}
+                    >
+                      {dayLabel(m.createdAt)}
+                    </Text>
+                  </View>
+                ):null}
+
+                <View
+                  style={[
+                    s.messageRow,
+                    mine?s.mine:s.theirs
+                  ]}
+                >
+                  <View
+                    style={[
+                      s.bubble,
+                      {
+                        opacity:m.failed?.65:1,
+                        backgroundColor:mine
+                          ?colors.blue
+                          :colors.card,
+                        borderColor:m.failed
+                          ?colors.rose
+                          :mine
+                            ?colors.blue
+                            :colors.line
+                      }
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        s.message,
+                        {color:mine?'#fff':colors.text}
+                      ]}
+                    >
+                      {m.text}
+                    </Text>
+
+                    <View style={s.meta}>
+                      {m.createdAt?(
+                        <Text
+                          style={[
+                            s.time,
+                            {
+                              color:mine
+                                ?'#DBEAFE'
+                                :colors.muted
+                            }
+                          ]}
+                        >
+                          {new Date(m.createdAt)
+                            .toLocaleTimeString([],{
+                              hour:'2-digit',
+                              minute:'2-digit'
+                            })}
+                        </Text>
+                      ):null}
+
+                      {mine?(
+                        <Text
+                          style={[
+                            s.time,
+                            {
+                              color:m.failed
+                                ?'#FECACA'
+                                :'#DBEAFE'
+                            }
+                          ]}
+                        >
+                          {m.failed
+                            ?'Failed'
+                            :m.pending
+                              ?'Sending...'
+                              :'Sent'}
+                        </Text>
+                      ):null}
+                    </View>
+                  </View>
+                </View>
+              </View>
+            );
+          }}
+        />
+
+        {data?.messaging.locked?(
+          <View
+            style={[
+              s.locked,
+              {
+                backgroundColor:colors.card,
+                borderColor:colors.line
+              }
+            ]}
+          >
+            <Text
+              style={[
+                s.lockedTitle,
+                {color:colors.ink}
+              ]}
+            >
+              Conversation paused
+            </Text>
+
+            <Body>
+              Your message history remains available to read.
+            </Body>
+          </View>
+        ):(
+          <View
+            style={[
+              s.composerShell,
+              {
+                borderTopColor:colors.line,
+                backgroundColor:colors.bg
+              }
+            ]}
+          >
+            {!data?.messaging.unlimited&&
+             data?.messaging.remaining!=null?(
+              <Text
+                style={[
+                  s.allowance,
+                  {color:colors.muted}
+                ]}
+              >
+                {data.messaging.remaining} free messages remaining
+              </Text>
+            ):null}
+
+            <View style={s.composer}>
+              <Input
+                style={s.input}
+                value={value}
+                onChangeText={setValue}
+                onFocus={()=>{
+                  setTimeout(
+                    ()=>list.current?.scrollToEnd({animated:true}),
+                    300
+                  );
+                }}
+                placeholder="Write a message..."
+                multiline
+                maxLength={1000}
+              />
+
+              <View style={s.send}>
+                <Button
+                  title={sending?'Sending...':'Send'}
+                  disabled={sending||!value.trim()}
+                  onPress={()=>void send()}
+                />
+              </View>
+            </View>
+
+            <Text
+              style={[
+                s.counter,
+                {
+                  color:value.length>900
+                    ?colors.rose
+                    :colors.muted
+                }
+              ]}
+            >
+              {value.length}/1000
+            </Text>
+          </View>
+        )}
+      </KeyboardAvoidingView>
+    </Screen>
+  );
+}
+
+const s=StyleSheet.create({
+  flex:{
+    flex:1,
+    gap:8
+  },
+  back:{
+    fontSize:15,
+    fontWeight:'800'
+  },
+  connectionCard:{
+    borderWidth:1,
+    borderRadius:18,
+    padding:12,
+    gap:10
+  },
+  person:{
+    flexDirection:'row',
+    alignItems:'center',
+    gap:12
+  },
+  avatar:{
+    width:58,
+    height:58,
+    borderRadius:29
+  },
+  avatarFallback:{
+    width:58,
+    height:58,
+    borderRadius:29,
+    alignItems:'center',
+    justifyContent:'center'
+  },
+  avatarInitial:{
+    fontSize:24,
+    fontWeight:'800'
+  },
+  verifiedDot:{
+    position:'absolute',
+    right:-1,
+    bottom:-1,
+    width:20,
+    height:20,
+    borderRadius:10,
+    borderWidth:2,
+    alignItems:'center',
+    justifyContent:'center'
+  },
+  verifiedDotText:{
+    color:'#fff',
+    fontSize:10,
+    fontWeight:'900'
+  },
+  personCopy:{
+    flex:1,
+    gap:2
+  },
+  nameRow:{
+    flexDirection:'row',
+    alignItems:'center',
+    gap:5
+  },
+  personName:{
+    fontSize:18,
+    fontWeight:'800'
+  },
+  blueCheck:{
+    fontSize:16,
+    fontWeight:'900'
+  },
+  personDetail:{
+    fontSize:12
+  },
+  privateLabel:{
+    fontSize:11
+  },
+  verifiedText:{
+    fontSize:11,
+    fontWeight:'800',
+    marginTop:1
+  },
+  divider:{
+    height:1
+  },
+  trust:{
+    flexDirection:'row',
+    alignItems:'center',
+    gap:22
+  },
+  trustItem:{
+    minWidth:58
+  },
+  trustValue:{
+    fontSize:18,
+    fontWeight:'800'
+  },
+  small:{
+    fontSize:11
+  },
+  entitlement:{
+    marginLeft:'auto'
+  },
+  chatStatus:{
+    borderRadius:999,
+    paddingVertical:7,
+    paddingHorizontal:10
+  },
+  chatStatusText:{
+    fontSize:11,
+    fontWeight:'800'
+  },
+  errorBox:{
+    borderWidth:1,
+    borderRadius:12,
+    padding:10,
+    flexDirection:'row',
+    justifyContent:'space-between',
+    alignItems:'center',
+    gap:10
+  },
+  error:{
+    fontSize:13,
+    lineHeight:18,
+    flex:1
+  },
+  list:{
+    paddingTop:8,
+    paddingBottom:20,
+    gap:5,
+    flexGrow:1
+  },
+  empty:{
+    paddingVertical:24,
+    gap:14
+  },
+  newConversation:{
+    borderWidth:1,
+    borderRadius:16,
+    padding:14,
+    gap:4
+  },
+  newConversationTitle:{
+    fontSize:16,
+    fontWeight:'800'
+  },
+  quickTitle:{
+    fontSize:12,
+    fontWeight:'800'
+  },
+  quickWrap:{
+    gap:8
+  },
+  quick:{
+    borderWidth:1,
+    borderRadius:999,
+    paddingVertical:9,
+    paddingHorizontal:13,
+    alignSelf:'flex-start'
+  },
+  day:{
+    alignItems:'center',
+    marginVertical:8
+  },
+  dayText:{
+    fontSize:11,
+    fontWeight:'700',
+    paddingHorizontal:8
+  },
+  messageRow:{
+    flexDirection:'row'
+  },
+  mine:{
+    justifyContent:'flex-end'
+  },
+  theirs:{
+    justifyContent:'flex-start'
+  },
+  bubble:{
+    maxWidth:'82%',
+    borderWidth:1,
+    borderRadius:18,
+    paddingHorizontal:14,
+    paddingVertical:10
+  },
+  message:{
+    fontSize:16,
+    lineHeight:21
+  },
+  meta:{
+    flexDirection:'row',
+    justifyContent:'flex-end',
+    gap:7,
+    marginTop:4
+  },
+  time:{
+    fontSize:10
+  },
+  composerShell:{
+    borderTopWidth:1,
+    paddingTop:8
+  },
+  composer:{
+    flexDirection:'row',
+    gap:8,
+    alignItems:'flex-end'
+  },
+  input:{
+    flex:1,
+    minHeight:48,
+    maxHeight:110
+  },
+  send:{
+    width:88
+  },
+  counter:{
+    fontSize:10,
+    textAlign:'right',
+    marginTop:2,
+    marginRight:96
+  },
+  allowance:{
+    fontSize:11,
+    fontWeight:'700',
+    marginBottom:6
+  },
+  locked:{
+    borderWidth:1,
+    borderRadius:14,
+    padding:12,
+    gap:2
+  },
+  lockedTitle:{
+    fontSize:14,
+    fontWeight:'800'
+  }
+});

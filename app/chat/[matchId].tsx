@@ -79,6 +79,25 @@ type AtlasCoachResponse={
   notice?:string;
 };
 
+type AtlasReplyTone='natural'|'curious'|'playful';
+
+type AtlasReplySuggestion={
+  tone:AtlasReplyTone;
+  text:string;
+};
+
+type AtlasReplyCoachResult={
+  intro:string;
+  replies:AtlasReplySuggestion[];
+};
+
+type AtlasReplyCoachResponse={
+  coach:AtlasReplyCoachResult;
+  persisted?:boolean;
+  contextMessages?:number;
+  notice?:string;
+};
+
 const QUICK_REPLIES=[
   'Hi! Nice to meet you',
   'How has your day been?',
@@ -182,6 +201,11 @@ export default function Chat(){
   const [coachBusy,setCoachBusy]=useState(false);
   const [coachConsent,setCoachConsent]=useState(false);
   const [coachError,setCoachError]=useState('');
+
+  const [atlasMode,setAtlasMode]=useState<'starters'|'reply'>('starters');
+  const [replyCoach,setReplyCoach]=useState<AtlasReplyCoachResult|null>(null);
+  const [replyCoachBusy,setReplyCoachBusy]=useState(false);
+  const [replyCoachError,setReplyCoachError]=useState('');
 
   const list=useRef<FlatList<{message:Message;showDay:boolean}>>(null);
   const mounted=useRef(true);
@@ -396,6 +420,53 @@ export default function Chat(){
       );
     }finally{
       setCoachBusy(false);
+    }
+  }
+
+  async function generateAtlasReplyCoach(){
+    if(!matchId||!coachConsent||replyCoachBusy)return;
+
+    try{
+      setReplyCoachBusy(true);
+      setReplyCoachError('');
+
+      const response=await api<AtlasReplyCoachResponse>(
+        '/api/atlas-ai/reply-coach',
+        {
+          method:'POST',
+          body:JSON.stringify({
+            matchId,
+            consent:true
+          })
+        }
+      );
+
+      if(!response.coach?.replies?.length){
+        throw new Error('ATLAS_AI_INVALID_REPLIES');
+      }
+
+      setReplyCoach(response.coach);
+    }catch(e){
+      const raw=e instanceof Error
+        ?e.message
+        :'Unable to generate reply suggestions.';
+
+      setReplyCoachError(
+        raw==='ATLAS_AI_TIMEOUT'||/operation was aborted/i.test(raw)
+          ?'Atlas is taking longer than expected. Please try again.'
+          :raw.startsWith('ATLAS_AI_INVALID_')||
+             raw==='ATLAS_AI_EMPTY_RESPONSE'
+            ?'Atlas could not create valid reply suggestions. Please try again.'
+            :raw==='ATLAS_REPLY_REQUIRES_MESSAGES'
+              ?'Send or receive a message first, then Atlas can help you reply.'
+              :raw==='BOTH_AI_OPT_INS_REQUIRED'
+                ?'Atlas AI reply suggestions require both members to have AI Discovery enabled.'
+                :raw==='AI_CONSENT_REQUIRED'
+                  ?'Atlas needs your permission before generating reply suggestions.'
+                  :raw
+      );
+    }finally{
+      setReplyCoachBusy(false);
     }
   }
 
@@ -1015,6 +1086,266 @@ export default function Chat(){
                   </Text>
 
                   {coachStatus?.available?(
+                    <View
+                      style={{
+                        flexDirection:'row',
+                        borderWidth:1,
+                        borderColor:colors.line,
+                        borderRadius:14,
+                        padding:3,
+                        marginBottom:12,
+                        backgroundColor:colors.bg
+                      }}
+                    >
+                      <Pressable
+                        onPress={()=>setAtlasMode('starters')}
+                        style={{
+                          flex:1,
+                          paddingVertical:9,
+                          paddingHorizontal:8,
+                          borderRadius:11,
+                          backgroundColor:atlasMode==='starters'
+                            ?colors.blue
+                            :'transparent'
+                        }}
+                      >
+                        <Text
+                          style={{
+                            textAlign:'center',
+                            color:atlasMode==='starters'
+                              ?'#fff'
+                              :colors.muted,
+                            fontSize:11,
+                            fontWeight:'800'
+                          }}
+                        >
+                          Start conversation
+                        </Text>
+                      </Pressable>
+
+                      <Pressable
+                        onPress={()=>setAtlasMode('reply')}
+                        style={{
+                          flex:1,
+                          paddingVertical:9,
+                          paddingHorizontal:8,
+                          borderRadius:11,
+                          backgroundColor:atlasMode==='reply'
+                            ?colors.blue
+                            :'transparent'
+                        }}
+                      >
+                        <Text
+                          style={{
+                            textAlign:'center',
+                            color:atlasMode==='reply'
+                              ?'#fff'
+                              :colors.muted,
+                            fontSize:11,
+                            fontWeight:'800'
+                          }}
+                        >
+                          Help me reply
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ):null}
+
+                  {coachStatus?.available&&atlasMode==='reply'?(
+                    <View>
+                      {replyCoach?(
+                        <View>
+                          <Text
+                            style={{
+                              color:colors.text,
+                              fontSize:13,
+                              lineHeight:19,
+                              fontWeight:'600',
+                              marginBottom:5
+                            }}
+                          >
+                            {replyCoach.intro}
+                          </Text>
+
+                          {replyCoach.replies.map((item,index)=>(
+                            <Pressable
+                              key={`${item.tone}-${index}`}
+                              onPress={()=>useAtlasSuggestion(item.text)}
+                              style={{
+                                paddingVertical:11,
+                                borderTopWidth:1,
+                                borderTopColor:colors.line
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  color:colors.blue,
+                                  fontSize:10,
+                                  fontWeight:'900',
+                                  marginBottom:4,
+                                  letterSpacing:.5
+                                }}
+                              >
+                                {item.tone.toUpperCase()}
+                              </Text>
+
+                              <Text
+                                style={{
+                                  color:colors.text,
+                                  fontSize:14,
+                                  lineHeight:20,
+                                  fontWeight:'600'
+                                }}
+                              >
+                                “{item.text}”
+                              </Text>
+                            </Pressable>
+                          ))}
+
+                          <Pressable
+                            disabled={replyCoachBusy}
+                            onPress={()=>void generateAtlasReplyCoach()}
+                            style={{
+                              alignSelf:'flex-start',
+                              marginTop:10,
+                              paddingVertical:5
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color:colors.blue,
+                                fontWeight:'800',
+                                fontSize:12,
+                                opacity:replyCoachBusy?.6:1
+                              }}
+                            >
+                              {replyCoachBusy
+                                ?'Atlas is thinking…'
+                                :'↻ Show me another set'}
+                            </Text>
+                          </Pressable>
+                        </View>
+                      ):(
+                        <View>
+                          <Text
+                            style={{
+                              color:colors.muted,
+                              fontSize:12,
+                              lineHeight:17,
+                              marginBottom:10
+                            }}
+                          >
+                            Atlas can use the latest messages in this
+                            conversation to suggest three editable replies.
+                          </Text>
+
+                          <Pressable
+                            onPress={()=>setCoachConsent(value=>!value)}
+                            style={{
+                              flexDirection:'row',
+                              alignItems:'flex-start',
+                              gap:10,
+                              paddingVertical:6
+                            }}
+                          >
+                            <View
+                              style={{
+                                width:20,
+                                height:20,
+                                borderRadius:5,
+                                borderWidth:1,
+                                borderColor:coachConsent
+                                  ?colors.blue
+                                  :colors.line,
+                                backgroundColor:coachConsent
+                                  ?colors.blue
+                                  :'transparent',
+                                alignItems:'center',
+                                justifyContent:'center'
+                              }}
+                            >
+                              {coachConsent?(
+                                <Text
+                                  style={{
+                                    color:'#fff',
+                                    fontWeight:'900',
+                                    fontSize:12
+                                  }}
+                                >
+                                  ✓
+                                </Text>
+                              ):null}
+                            </View>
+
+                            <View style={{flex:1}}>
+                              <Text
+                                style={{
+                                  color:colors.text,
+                                  fontWeight:'800',
+                                  fontSize:13
+                                }}
+                              >
+                                Generate personalised replies with Atlas AI
+                              </Text>
+
+                              <Text
+                                style={{
+                                  color:colors.muted,
+                                  fontSize:11,
+                                  lineHeight:16,
+                                  marginTop:3
+                                }}
+                              >
+                                Atlas uses up to the latest 10 messages to
+                                create private, editable suggestions.
+                              </Text>
+                            </View>
+                          </Pressable>
+
+                          <Pressable
+                            disabled={!coachConsent||replyCoachBusy}
+                            onPress={()=>void generateAtlasReplyCoach()}
+                            style={{
+                              marginTop:10,
+                              paddingHorizontal:14,
+                              paddingVertical:10,
+                              borderRadius:18,
+                              alignSelf:'flex-start',
+                              backgroundColor:colors.blue,
+                              opacity:!coachConsent||replyCoachBusy?.5:1
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color:'#fff',
+                                fontWeight:'900',
+                                fontSize:12
+                              }}
+                            >
+                              {replyCoachBusy
+                                ?'Atlas is thinking…'
+                                :'Suggest replies'}
+                            </Text>
+                          </Pressable>
+                        </View>
+                      )}
+
+                      {replyCoachError?(
+                        <Text
+                          style={{
+                            color:colors.rose,
+                            fontSize:12,
+                            lineHeight:17,
+                            marginTop:10
+                          }}
+                        >
+                          {replyCoachError}
+                        </Text>
+                      ):null}
+                    </View>
+                  ):null}
+
+                  {coachStatus?.available&&atlasMode==='starters'?(
                     coach?(
                       <View>
                         <Text

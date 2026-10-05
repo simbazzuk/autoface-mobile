@@ -36,6 +36,7 @@ export async function enablePushNotifications() {
   if (!id) throw new Error('EAS_PROJECT_ID_MISSING');
 
   const token = (await Notifications.getExpoPushTokenAsync({ projectId: id })).data;
+
   await api('/api/mobile-push-token', {
     method: 'POST',
     body: JSON.stringify({ token, platform: 'ios' }),

@@ -48,11 +48,32 @@ type Messaging={
   contactDetailSharing?:boolean;
 };
 
+type RelationshipInsightDimension={
+  code:string;
+  label:string;
+  score:number;
+  explanation:string;
+};
+
+type RelationshipInsight={
+  available:boolean;
+  compatibilityScore?:number;
+  compatibilityLevel?:string;
+  strongestAlignments?:string[];
+  conversationPoints?:string[];
+  dimensions?:RelationshipInsightDimension[];
+  confidence?:string;
+  confidenceScore?:number;
+  summary?:string;
+  notice?:string;
+};
+
 type Conversation={
   matchId:string;
   other:Other;
   messages:Message[];
   messaging:Messaging;
+  relationshipInsight?:RelationshipInsight;
 };
 
 type AtlasCoachStatus={
@@ -60,6 +81,10 @@ type AtlasCoachStatus={
   viewerOptIn:boolean;
   otherOptIn:boolean;
   available:boolean;
+  usage?:{
+    conversationCoach:AtlasUsage;
+    replyCoach:AtlasUsage;
+  };
 };
 
 type AtlasCoachStarter={
@@ -75,8 +100,17 @@ type AtlasCoachResult={
 
 type AtlasCoachResponse={
   coach:AtlasCoachResult;
+  usage?:AtlasUsage;
   persisted?:boolean;
   notice?:string;
+};
+
+type AtlasUsage={
+  feature:'atlasConversationCoach'|'atlasReplyCoach';
+  limit:number;
+  used:number;
+  remaining:number;
+  period:string;
 };
 
 type AtlasReplyTone='natural'|'curious'|'playful';
@@ -93,6 +127,7 @@ type AtlasReplyCoachResult={
 
 type AtlasReplyCoachResponse={
   coach:AtlasReplyCoachResult;
+  usage?:AtlasUsage;
   persisted?:boolean;
   contextMessages?:number;
   notice?:string;
@@ -206,6 +241,8 @@ export default function Chat(){
   const [replyCoach,setReplyCoach]=useState<AtlasReplyCoachResult|null>(null);
   const [replyCoachBusy,setReplyCoachBusy]=useState(false);
   const [replyCoachError,setReplyCoachError]=useState('');
+  const [starterUsage,setStarterUsage]=useState<AtlasUsage|null>(null);
+  const [replyUsage,setReplyUsage]=useState<AtlasUsage|null>(null);
 
   const list=useRef<FlatList<{message:Message;showDay:boolean}>>(null);
   const mounted=useRef(true);
@@ -301,7 +338,15 @@ export default function Chat(){
       `/api/atlas-ai/introduction-coach?matchId=${encodeURIComponent(matchId)}`
     )
       .then(status=>{
-        if(active)setCoachStatus(status);
+        if(!active)return;
+
+        console.log('[Atlas status]', JSON.stringify(status));
+        setCoachStatus(status);
+
+        if(status.usage){
+          setStarterUsage(status.usage.conversationCoach);
+          setReplyUsage(status.usage.replyCoach);
+        }
       })
       .catch(()=>{
         if(active)setCoachStatus(null);
@@ -401,13 +446,23 @@ export default function Chat(){
       }
 
       setCoach(response.coach);
+      if(response.usage)setStarterUsage(response.usage);
     }catch(e){
       const raw=e instanceof Error
         ?e.message
         :'Unable to generate conversation starters.';
 
+      if(raw==='ATLAS_DAILY_LIMIT_REACHED'){
+        setStarterUsage(current=>current
+          ?{...current,used:current.limit,remaining:0}
+          :null
+        );
+      }
+
       setCoachError(
-        raw==='ATLAS_AI_TIMEOUT'||/operation was aborted/i.test(raw)
+        raw==='ATLAS_DAILY_LIMIT_REACHED'
+          ?'You have used today’s Atlas conversation allowance.'
+          :raw==='ATLAS_AI_TIMEOUT'||/operation was aborted/i.test(raw)
           ?'Atlas is taking longer than expected. Please try again.'
           :raw.startsWith('ATLAS_AI_INVALID_')||
              raw==='ATLAS_AI_EMPTY_RESPONSE'
@@ -446,13 +501,23 @@ export default function Chat(){
       }
 
       setReplyCoach(response.coach);
+      if(response.usage)setReplyUsage(response.usage);
     }catch(e){
       const raw=e instanceof Error
         ?e.message
         :'Unable to generate reply suggestions.';
 
+      if(raw==='ATLAS_DAILY_LIMIT_REACHED'){
+        setReplyUsage(current=>current
+          ?{...current,used:current.limit,remaining:0}
+          :null
+        );
+      }
+
       setReplyCoachError(
-        raw==='ATLAS_AI_TIMEOUT'||/operation was aborted/i.test(raw)
+        raw==='ATLAS_DAILY_LIMIT_REACHED'
+          ?'You have used today’s Atlas reply allowance.'
+          :raw==='ATLAS_AI_TIMEOUT'||/operation was aborted/i.test(raw)
           ?'Atlas is taking longer than expected. Please try again.'
           :raw.startsWith('ATLAS_AI_INVALID_')||
              raw==='ATLAS_AI_EMPTY_RESPONSE'
@@ -708,65 +773,68 @@ export default function Chat(){
               ]}
             />
 
-            <View style={s.trust}>
-              <View style={s.trustItem}>
-                <Text
-                  style={[
-                    s.trustValue,
-                    {color:colors.ink}
-                  ]}
-                >
+            <View style={{
+              flexDirection:'row',
+              alignItems:'flex-start',
+              gap:10
+            }}>
+              <View style={{flex:1,minWidth:0}}>
+                <Text style={[
+                  s.trustValue,
+                  {color:colors.ink}
+                ]}>
                   {data.other.compatibilityScore??'-'}%
                 </Text>
-                <Text
-                  style={[
-                    s.small,
-                    {color:colors.muted}
-                  ]}
-                >
+                <Text style={[
+                  s.small,
+                  {color:colors.muted}
+                ]}>
                   Atlas
                 </Text>
               </View>
 
-              <View style={s.trustItem}>
-                <Text
-                  style={[
-                    s.trustValue,
-                    {color:colors.ink}
-                  ]}
-                >
+              <View style={{flex:1,minWidth:0}}>
+                <Text style={[
+                  s.trustValue,
+                  {color:colors.ink}
+                ]}>
                   {data.other.authenticityScore??'-'}%
                 </Text>
-                <Text
-                  style={[
-                    s.small,
-                    {color:colors.muted}
-                  ]}
-                >
+                <Text style={[
+                  s.small,
+                  {color:colors.muted}
+                ]}>
                   Authenticity
                 </Text>
               </View>
 
-              <View style={s.entitlement}>
-                <View
-                  style={[
-                    s.chatStatus,
-                    {
-                      backgroundColor:data.messaging.locked
-                        ?colors.photo
-                        :colors.blue
-                    }
-                  ]}
-                >
+              <View style={{
+                flex:1,
+                minWidth:0,
+                alignItems:'flex-end'
+              }}>
+                <View style={{
+                  alignSelf:'stretch',
+                  backgroundColor:data.messaging.locked
+                    ?colors.photo
+                    :colors.blue,
+                  borderRadius:999,
+                  paddingVertical:8,
+                  paddingHorizontal:8,
+                  alignItems:'center',
+                  justifyContent:'center'
+                }}>
                   <Text
-                    style={[
-                      s.chatStatusText,
-                      {
-                        color:data.messaging.locked
-                          ?colors.rose
-                          :'#fff'
-                      }
-                    ]}
+                    numberOfLines={2}
+                    style={{
+                      color:data.messaging.locked
+                        ?colors.rose
+                        :'#FFFFFF',
+                      fontSize:11,
+                      lineHeight:14,
+                      fontWeight:'900',
+                      textAlign:'center'
+                    }}
                   >
                     {data.messaging.unlimited
                       ?'Unlimited chat'
@@ -777,6 +845,35 @@ export default function Chat(){
                 </View>
               </View>
             </View>
+
+            {data.relationshipInsight?.available?(
+              <Pressable
+                onPress={()=>
+                  router.push(
+                    `/relationship-insight/${encodeURIComponent(matchId)}` as any
+                  )
+                }
+                style={{
+                  marginTop:14,
+                  backgroundColor:colors.pink,
+                  borderWidth:1,
+                  borderColor:colors.pink,
+                  borderRadius:16,
+                  paddingVertical:12,
+                  paddingHorizontal:16,
+                  alignItems:'center',
+                  justifyContent:'center'
+                }}
+              >
+                <Text style={{
+                  color:'#FFFFFF',
+                  fontSize:13,
+                  fontWeight:'900'
+                }}>
+                  ✦ View relationship insight
+                </Text>
+              </Pressable>
+            ):null}
           </View>
         ):null}
 
@@ -1085,6 +1182,122 @@ export default function Chat(){
                     Nothing is sent until you choose and send it yourself.
                   </Text>
 
+                  {(
+                    (atlasMode==='reply'&&replyUsage?.remaining===0)||
+                    (atlasMode==='starters'&&starterUsage?.remaining===0)
+                  )?(
+                    <View
+                      style={{
+                        backgroundColor:colors.blue+'0D',
+                        borderWidth:1,
+                        borderColor:colors.blue+'55',
+                        borderRadius:16,
+                        padding:14,
+                        marginBottom:12
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color:colors.blue,
+                          fontSize:10,
+                          fontWeight:'900',
+                          letterSpacing:1,
+                          marginBottom:6
+                        }}
+                      >
+                        ✦ ATLAS DAILY LIMIT
+                      </Text>
+
+                      <Text
+                        style={{
+                          color:colors.ink,
+                          fontSize:15,
+                          fontWeight:'900',
+                          marginBottom:5
+                        }}
+                      >
+                        You've used today's Atlas suggestions
+                      </Text>
+
+                      <Text
+                        style={{
+                          color:colors.muted,
+                          fontSize:12,
+                          lineHeight:18,
+                          marginBottom:12
+                        }}
+                      >
+                        AutoFace Plus gives you 25 Conversation Coach and 25 Reply Coach suggestions each day.
+                      </Text>
+
+                      <Pressable
+                        onPress={()=>{
+                          setCoachOpen(false);
+                          router.push('/membership' as any);
+                        }}
+                        style={{
+                          alignSelf:'flex-start',
+                          backgroundColor:colors.blue,
+                          paddingHorizontal:14,
+                          paddingVertical:10,
+                          borderRadius:12
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color:'#FFFFFF',
+                            fontSize:12,
+                            fontWeight:'900'
+                          }}
+                        >
+                          Explore AutoFace Plus
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ):atlasMode==='reply'&&replyUsage?(
+                    <View
+                      style={{
+                        alignSelf:'flex-start',
+                        backgroundColor:colors.pink,
+                        borderRadius:999,
+                        paddingHorizontal:12,
+                        paddingVertical:7,
+                        marginBottom:12
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color:'#FFFFFF',
+                          fontSize:11,
+                          fontWeight:'900'
+                        }}
+                      >
+                        {`${replyUsage.remaining} / ${replyUsage.limit} replies left today`}
+                      </Text>
+                    </View>
+                  ):atlasMode==='starters'&&starterUsage?(
+                    <View
+                      style={{
+                        alignSelf:'flex-start',
+                        backgroundColor:colors.pink,
+                        borderRadius:999,
+                        paddingHorizontal:12,
+                        paddingVertical:7,
+                        marginBottom:12
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color:'#FFFFFF',
+                          fontSize:11,
+                          fontWeight:'900'
+                        }}
+                      >
+                        {`${starterUsage.remaining} / ${starterUsage.limit} suggestions left today`}
+                      </Text>
+                    </View>
+                  ):null}
+
                   {coachStatus?.available?(
                     <View
                       style={{
@@ -1203,7 +1416,7 @@ export default function Chat(){
                           ))}
 
                           <Pressable
-                            disabled={replyCoachBusy}
+                            disabled={replyCoachBusy||replyUsage?.remaining===0}
                             onPress={()=>void generateAtlasReplyCoach()}
                             style={{
                               alignSelf:'flex-start',
@@ -1303,7 +1516,7 @@ export default function Chat(){
                           </Pressable>
 
                           <Pressable
-                            disabled={!coachConsent||replyCoachBusy}
+                            disabled={!coachConsent||replyCoachBusy||replyUsage?.remaining===0}
                             onPress={()=>void generateAtlasReplyCoach()}
                             style={{
                               marginTop:10,

@@ -23,6 +23,9 @@ class AppDelegate: ExpoAppDelegate, ExpoReactNativeFactoryProvider {
     // Install the native AWS Face Liveness presenter.
     AutoFaceLivenessPresenter.shared.install()
 
+    // TEMP: direct StoreKit product availability test.
+    testAutoFaceSubscription()
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

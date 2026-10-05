@@ -251,6 +251,8 @@ PODS:
   - hermes-engine (250829098.0.17):
     - hermes-engine/Pre-built (= 250829098.0.17)
   - hermes-engine/Pre-built (250829098.0.17)
+  - PurchasesHybridCommon (19.5.0):
+    - RevenueCat (= 5.92.0)
   - RCTDeprecation (0.86.3)
   - RCTRequired (0.86.3)
   - RCTSwiftUI (0.86.3)
@@ -2140,6 +2142,7 @@ PODS:
     - React-utils (= 0.86.3)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.86.3)
+  - RevenueCat (5.92.0)
   - RNCAsyncStorage (2.2.0):
     - hermes-engine
     - RCTRequired
@@ -2184,6 +2187,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNPurchases (10.11.0):
+    - PurchasesHybridCommon (= 19.5.0)
+    - React-Core
   - RNScreens (4.26.2):
     - hermes-engine
     - RCTRequired
@@ -2341,8 +2347,14 @@ DEPENDENCIES:
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
+  - RNPurchases (from `../node_modules/react-native-purchases`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
+
+SPEC REPOS:
+  trunk:
+    - PurchasesHybridCommon
+    - RevenueCat
 
 EXTERNAL SOURCES:
   AutoFaceLiveness:
@@ -2558,6 +2570,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCMaskedView:
     :path: "../node_modules/@react-native-masked-view/masked-view"
+  RNPurchases:
+    :path: "../node_modules/react-native-purchases"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   Yoga:
@@ -2595,6 +2609,7 @@ SPEC CHECKSUMS:
   EXUpdatesInterface: 4c96533f11c8cefe879bd506564cc2d537f56804
   FBLazyVector: 2138c6c2ab66c31bf5754dc18097fbc498a49c7f
   hermes-engine: 63c5db7d529c36335fada6582fd293ae2a105d77
+  PurchasesHybridCommon: da80a28f43fdfbf96dcb04c3aa2c6122b0e315d2
   RCTDeprecation: 96f68ebf33f8762466b01d57d6e873c4f30efb07
   RCTRequired: 166eed8ad6d8440e73e56d09a9090366609823d2
   RCTSwiftUI: e818198d11928a78c2b2afe281d072171dab617f
@@ -2668,8 +2683,10 @@ SPEC CHECKSUMS:
   ReactCodegen: 828f54f35f2bc4ee3f39345144ff0ec22c9535c2
   ReactCommon: 02f6a489d5eb4ab79d7deba5cd4434e0ba351a07
   ReactNativeDependencies: 6738e602b46fd24aa453cd58267ec3bb8bf29d27
+  RevenueCat: 39657b04641af73c29788b4bf2cf1acff52fd0dc
   RNCAsyncStorage: 2ad919e88b8bc2cd80e8697ce66d04d006743283
   RNCMaskedView: eb2b2e538afa907f05a5848a1a1ac26092e6fec9
+  RNPurchases: 2cc6a918e58254980bc1db0b293087a77b454e9a
   RNScreens: c1a06fd73d0581a2a28a160577be393f579662b9
   Yoga: 18b74b3ade30bebc1904004dfaceae1dd02a330a
 

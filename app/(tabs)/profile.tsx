@@ -2,7 +2,7 @@ import React,{useCallback,useEffect,useMemo,useState} from 'react';
 import {Image,Pressable,ScrollView,Switch,Text,View} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import {signOut} from 'firebase/auth';
-import {doc,getDoc,serverTimestamp,updateDoc} from 'firebase/firestore';
+import {doc,getDoc} from 'firebase/firestore';
 import {router,useFocusEffect} from 'expo-router';
 import {auth,db} from '@/src/lib/firebase';
 import {useAuth} from '@/src/context/Auth';
@@ -33,6 +33,7 @@ type Form={
   generalLocation:string;
   occupation:string;
   aboutMe:string;
+  relationshipIntent:'marriage'|'long_term_relationship'|'serious_relationship';
 };
 
 const empty:Form={
@@ -41,7 +42,8 @@ const empty:Form={
   age:'',
   generalLocation:'',
   occupation:'',
-  aboutMe:''
+  aboutMe:'',
+  relationshipIntent:'marriage'
 };
 
 const API_BASE=(
@@ -118,7 +120,12 @@ export default function Profile(){
           age:p.age?String(p.age):'',
           generalLocation:p.generalLocation??'',
           occupation:p.occupation??'',
-          aboutMe:p.aboutMe??''
+          aboutMe:p.aboutMe??'',
+          relationshipIntent:
+            p.relationshipIntent==='long_term_relationship'||
+            p.relationshipIntent==='serious_relationship'
+              ?p.relationshipIntent
+              :'marriage'
         });
       }
 
@@ -143,12 +150,15 @@ export default function Profile(){
 
   const verified=useMemo(
     ()=>[
-      account?.verification?.identityVerified,
       account?.verification?.livenessVerified,
       account?.verification?.photoVerified
     ].filter(Boolean).length,
     [account]
   );
+
+  const faceVerified=
+    account?.verification?.livenessVerified===true &&
+    account?.verification?.photoVerified===true;
 
   const profileComplete=useMemo(
     ()=>[
@@ -392,18 +402,20 @@ export default function Profile(){
       setSaving(true);
       setMessage('');
 
-      await updateDoc(
-        doc(db,'profiles',user.uid),
-        {
-          firstName:form.firstName.trim(),
-          preferredName:form.preferredName.trim(),
-          age,
-          generalLocation:form.generalLocation.trim(),
-          occupation:form.occupation.trim(),
-          aboutMe:form.aboutMe.trim(),
-          updatedAt:serverTimestamp()
-        }
-      );
+      await api('/api/account',{
+        method:'PATCH',
+        body:JSON.stringify({
+          profile:{
+            firstName:form.firstName.trim(),
+            preferredName:form.preferredName.trim(),
+            age,
+            generalLocation:form.generalLocation.trim(),
+            occupation:form.occupation.trim(),
+            aboutMe:form.aboutMe.trim(),
+            relationshipIntent:form.relationshipIntent
+          }
+        })
+      });
 
       setMessage('Profile saved.');
     }catch(e){
@@ -520,6 +532,78 @@ export default function Profile(){
         }}
         keyboardShouldPersistTaps="handled"
       >
+        <Pressable
+          onPress={()=>router.push('/membership')}
+          style={{
+            backgroundColor:colors.card,
+            borderWidth:1,
+            borderColor:colors.line,
+            borderRadius:18,
+            padding:16
+          }}
+        >
+          <View
+            style={{
+              flexDirection:'row',
+              alignItems:'center'
+            }}
+          >
+            <View
+              style={{
+                width:38,
+                height:38,
+                borderRadius:19,
+                backgroundColor:colors.bg,
+                alignItems:'center',
+                justifyContent:'center',
+                marginRight:12
+              }}
+            >
+              <Text
+                style={{
+                  color:colors.blue,
+                  fontSize:18,
+                  fontWeight:'900'
+                }}
+              >
+                ✦
+              </Text>
+            </View>
+
+            <View style={{flex:1}}>
+              <Text
+                style={{
+                  color:colors.ink,
+                  fontSize:15,
+                  fontWeight:'800',
+                  marginBottom:3
+                }}
+              >
+                Membership & plan
+              </Text>
+
+              <Text
+                style={{
+                  color:colors.muted,
+                  fontSize:13
+                }}
+              >
+                Benefits, Atlas usage and plan details
+              </Text>
+            </View>
+
+            <Text
+              style={{
+                color:colors.blue,
+                fontSize:22,
+                fontWeight:'700'
+              }}
+            >
+              ›
+            </Text>
+          </View>
+        </Pressable>
+
         <Card>
           <View
             style={{
@@ -586,8 +670,8 @@ export default function Profile(){
           <H2>Authenticity & verification</H2>
 
           <Body>
-            Verification helps other members understand which
-            authenticity checks your account has completed.
+            Face Verification confirms that a live person matches
+            the current profile photo.
           </Body>
 
           <View
@@ -604,20 +688,20 @@ export default function Profile(){
                 fontSize:16
               }}
             >
-              {verified} of 3 checks complete
+              {verified} of 2 checks complete
             </Text>
 
             <Text
               style={{
-                color:verified===3
+                color:faceVerified
                   ?colors.green
                   :colors.blue,
                 fontWeight:'800'
               }}
             >
-              {verified===3
+              {faceVerified
                 ?'Complete'
-                :`${Math.round(verified/3*100)}%`}
+                :`${Math.round(verified/2*100)}%`}
             </Text>
           </View>
 
@@ -632,8 +716,8 @@ export default function Profile(){
             <View
               style={{
                 height:8,
-                width:`${Math.round(verified/3*100)}%`,
-                backgroundColor:verified===3
+                width:`${Math.round(verified/2*100)}%`,
+                backgroundColor:faceVerified
                   ?colors.green
                   :colors.blue
               }}
@@ -641,42 +725,68 @@ export default function Profile(){
           </View>
 
           <VerificationRow
-            title="Photo"
-            detail="Profile photo authenticity check"
+            title="Profile photo"
+            detail="Live face matches your current profile photo"
             ok={account?.verification?.photoVerified}
           />
 
           <VerificationRow
             title="Liveness"
-            detail="Amazon Rekognition check for a live person"
+            detail="Amazon Rekognition live-person check"
             ok={account?.verification?.livenessVerified}
           />
 
-          <VerificationRow
-            title="Identity"
-            detail="AutoFace identity/authenticity status"
-            ok={account?.verification?.identityVerified}
-          />
+          {faceVerified?(
+            <View
+              style={{
+                borderWidth:1,
+                borderColor:colors.green,
+                borderRadius:18,
+                padding:16
+              }}
+            >
+              <Text
+                style={{
+                  color:colors.green,
+                  fontWeight:'900',
+                  fontSize:16,
+                  marginBottom:5
+                }}
+              >
+                ✓ Face Verified
+              </Text>
 
-          <Body>
-            {verified===3
-              ?'Your available authenticity checks are complete.'
-              :'Pending checks remain visible as pending; AutoFace does not treat them as completed until the backend verifies them.'}
-          </Body>
+              <Text
+                style={{
+                  color:colors.muted,
+                  fontSize:13,
+                  lineHeight:19
+                }}
+              >
+                Your live face has been successfully matched to
+                your current profile photo.
+              </Text>
+            </View>
+          ):(
+            <Body>
+              Complete Face Verification to confirm liveness and
+              match your live face with your current profile photo.
+            </Body>
+          )}
 
-          <Button
-            title={
-              verificationBusy
-                ?'Opening secure check...'
-                :verified===3
-                ?'Verify again'
-                :verified>0
-                ?'Continue face verification'
-                :'Start face verification'
-            }
-            disabled={verificationBusy}
-            onPress={startVerification}
-          />
+          {!faceVerified?(
+            <Button
+              title={
+                verificationBusy
+                  ?'Opening secure check...'
+                  :verified>0
+                  ?'Continue face verification'
+                  :'Start face verification'
+              }
+              disabled={verificationBusy}
+              onPress={startVerification}
+            />
+          ):null}
 
           <Button
             title="Refresh verification"
@@ -685,9 +795,9 @@ export default function Profile(){
           />
 
           <Body>
-            Face verification compares a live check with your profile
-            photo. AutoFace displays the trusted backend outcome rather
-            than calculating a verification result on the phone.
+            Face Verification is an authenticity check. It does not
+            verify a government identity document or guarantee a
+            member's identity, intentions or behaviour.
           </Body>
         </Card>
 
@@ -728,6 +838,38 @@ export default function Profile(){
             value={form.occupation}
             onChangeText={v=>change('occupation',v)}
           />
+
+          <Body>Relationship intention</Body>
+
+          <View style={{gap:8}}>
+            {[
+              ['marriage','Marriage'],
+              ['long_term_relationship','Long-term relationship'],
+              ['serious_relationship','Serious relationship']
+            ].map(([value,label])=>(
+              <Pressable
+                key={value}
+                onPress={()=>change(
+                  'relationshipIntent',
+                  value as Form['relationshipIntent']
+                )}
+                style={{
+                  paddingVertical:12,
+                  paddingHorizontal:14,
+                  borderRadius:12,
+                  borderWidth:1,
+                  borderColor:
+                    form.relationshipIntent===value
+                      ?colors.text
+                      :colors.line
+                }}
+              >
+                <Text style={{color:colors.text}}>
+                  {form.relationshipIntent===value?'✓  ':''}{label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
 
           <Input
             placeholder="About me"
@@ -844,15 +986,12 @@ export default function Profile(){
           <Button
             title={
               pushBusy
-                ?'Enabling...'
+                ?'Registering...'
                 :pushStatus==='Enabled'
-                ?'Notifications enabled'
+                ?'Re-register notifications'
                 :'Enable notifications'
             }
-            disabled={
-              pushBusy||
-              pushStatus==='Enabled'
-            }
+            disabled={pushBusy}
             onPress={enableNotifications}
           />
         </Card>

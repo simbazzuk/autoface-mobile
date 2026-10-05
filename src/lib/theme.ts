@@ -1,18 +1,84 @@
 export type ThemeMode = 'system' | 'light' | 'dark';
+
 export type ThemeColors = {
-  ink:string; text:string; muted:string; blue:string; pale:string; line:string;
-  white:string; bg:string; card:string; input:string; green:string; rose:string;
-  tab:string; placeholder:string; photo:string;
+  ink:string; text:string; muted:string; blue:string; pink:string; purple:string;
+  pale:string; line:string; white:string; bg:string; card:string; input:string;
+  green:string; rose:string; tab:string; placeholder:string; photo:string;
 };
+
+//
+// AutoFace brand palette
+//
+// Blue / cyan  = Discovery, Atlas, information and primary actions
+// Pink         = Interest, connection and relationship actions
+// Green        = Verification / success only
+//
 export const lightColors: ThemeColors = {
-  ink:'#14233B',text:'#14233B',muted:'#667085',blue:'#2563EB',pale:'#EFF6FF',
-  line:'#E5E7EB',white:'#FFFFFF',bg:'#F8FAFC',card:'#FFFFFF',input:'#FFFFFF',
-  green:'#087A55',rose:'#BE3455',tab:'#FFFFFF',placeholder:'#98A2B3',photo:'#EEF2F7'
+  ink:'#10133A',
+  text:'#10133A',
+  muted:'#696A86',
+
+  // AutoFace electric blue
+  blue:'#087CFF',
+  pink:'#F725A8',
+  purple:'#A829F7',
+
+  // Soft blue surface
+  pale:'#EDF5FF',
+
+  line:'#E3E3F1',
+  white:'#FFFFFF',
+
+  // Very subtle blue/lavender background
+  bg:'#F8F8FF',
+  card:'#FFFFFF',
+  input:'#FFFFFF',
+
+  // Semantic success
+  green:'#087A55',
+
+  // AutoFace pink
+  rose:'#F725A8',
+
+  tab:'#FFFFFF',
+  placeholder:'#9293AA',
+  photo:'#F0F1FA'
 };
+
 export const darkColors: ThemeColors = {
-  ink:'#F8FAFC',text:'#F8FAFC',muted:'#AAB4C3',blue:'#60A5FA',pale:'#172554',
-  line:'#334155',white:'#FFFFFF',bg:'#0B1220',card:'#121C2E',input:'#172235',
-  green:'#34D399',rose:'#FB7185',tab:'#0F172A',placeholder:'#7C8A9E',photo:'#1E293B'
+  ink:'#FFFFFF',
+  text:'#FFFFFF',
+  muted:'#B8B8D2',
+
+  // AutoFace electric blue
+  blue:'#168CFF',
+  pink:'#FF2AA5',
+  purple:'#B52CFF',
+
+  // Blue-tinted surface
+  pale:'#101B55',
+
+  line:'#303260',
+  white:'#FFFFFF',
+
+  // Midnight colour taken from the logo direction
+  bg:'#05052B',
+
+  // Slightly lifted navy surfaces
+  card:'#0D103D',
+  input:'#121648',
+
+  // Semantic success
+  green:'#34D399',
+
+  // AutoFace pink
+  rose:'#FF2AA5',
+
+  tab:'#080832',
+  placeholder:'#8586A8',
+  photo:'#141849'
 };
-// Kept for compatibility with any older screen code. New UI should use useAppTheme().colors.
+
+// Kept for compatibility with any older screen code.
+// New UI should use useAppTheme().colors.
 export const C = lightColors;

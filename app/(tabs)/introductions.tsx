@@ -215,12 +215,18 @@ export default function Introductions(){
                 <View
                   style={[
                     s.step,
-                    {backgroundColor:i===3?colors.blue:colors.photo}
+                    {
+                      backgroundColor:i<3
+                        ?colors.photo
+                        :colors.blue,
+                      borderWidth:i<3?1:0,
+                      borderColor:i<3?colors.line:'transparent'
+                    }
                   ]}
                 >
                   <Text
                     style={{
-                      color:i===3?'#fff':colors.ink,
+                      color:i===2?colors.rose:(i<3?colors.muted:'#fff'),
                       fontWeight:'800',
                       fontSize:10
                     }}
@@ -250,15 +256,19 @@ export default function Introductions(){
               style={[
                 s.tab,
                 {
-                  backgroundColor:tab===key?colors.blue:colors.card,
-                  borderColor:tab===key?colors.blue:colors.line
+                  backgroundColor:tab===key
+                    ?(key==='saved'?colors.blue+'14':colors.photo)
+                    :colors.card,
+                  borderColor:tab===key
+                    ?(key==='saved'?colors.blue:colors.line)
+                    :colors.line
                 }
               ]}
             >
               <Text
                 style={[
                   s.tabText,
-                  {color:tab===key?'#fff':colors.ink}
+                  {color:tab===key?(key==='saved'?'#fff':colors.rose):colors.ink}
                 ]}
               >
                 {label}
@@ -267,7 +277,7 @@ export default function Introductions(){
               <Text
                 style={[
                   s.count,
-                  {color:tab===key?'#fff':colors.muted}
+                  {color:tab===key?(key==='saved'?'#fff':colors.rose):colors.muted}
                 ]}
               >
                 {count}
@@ -321,7 +331,7 @@ export default function Introductions(){
                   <View
                     style={[
                       s.mutualBadge,
-                      {backgroundColor:locked?colors.photo:colors.blue}
+                      {backgroundColor:locked?colors.photo:colors.rose}
                     ]}
                   >
                     <Text

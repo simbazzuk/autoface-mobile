@@ -941,39 +941,41 @@ export default function Discover(){
     }
   }
 
-  useEffect(()=>{
-    let active=true;
+  useFocusEffect(
+    useCallback(()=>{
+      let active=true;
 
-    async function checkAtlasDaily(){
-      try{
-        const today=atlasDailyDateKey();
+      async function checkAtlasDaily(){
+        try{
+          const today=atlasDailyDateKey();
 
-        // Development only: show Atlas Daily again after a fresh launch.
-        if (__DEV__) {
-          await AsyncStorage.removeItem('atlasDailyV1LastShown');
+          // Development only: show Atlas Daily again on a fresh visit.
+          if (__DEV__) {
+            await AsyncStorage.removeItem('atlasDailyV1LastShown');
+          }
+
+          const [lastShown,enabled]=await Promise.all([
+            AsyncStorage.getItem('atlasDailyV1LastShown'),
+            AsyncStorage.getItem('atlasDailyV1Enabled')
+          ]);
+
+          if(
+            active &&
+            enabled!=='false' &&
+            lastShown!==today
+          ){
+            setAtlasDailyOpen(true);
+          }
+        }catch{
+          // Atlas Daily should never block Discovery.
         }
-
-        const [lastShown,enabled]=await Promise.all([
-          AsyncStorage.getItem('atlasDailyV1LastShown'),
-          AsyncStorage.getItem('atlasDailyV1Enabled')
-        ]);
-
-        if(
-          active &&
-          enabled!=='false' &&
-          lastShown!==today
-        ){
-          setAtlasDailyOpen(true);
-        }
-      }catch{
-        // Atlas Daily should never block Discovery.
       }
-    }
 
-    void checkAtlasDaily();
+      void checkAtlasDaily();
 
-    return ()=>{active=false;};
-  },[]);
+      return ()=>{active=false;};
+    },[])
+  );
 
   async function closeAtlasDaily(){
     try{

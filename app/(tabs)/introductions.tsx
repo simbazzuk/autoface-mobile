@@ -195,7 +195,7 @@ export default function Introductions(){
   ];
 
   return(
-    <Screen eyebrow="PRIVATE INTRODUCTIONS" title="Your connections">
+    <Screen eyebrow="PRIVATE INTRODUCTIONS" title="Introductions">
       <ScrollView
         contentContainerStyle={s.content}
         refreshControl={

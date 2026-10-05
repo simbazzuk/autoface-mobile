@@ -950,12 +950,12 @@ export default function Discover(){
 
         // Development only: show Atlas Daily again after a fresh launch.
         if (__DEV__) {
-          await AsyncStorage.removeItem('atlasDailyLastShown');
+          await AsyncStorage.removeItem('atlasDailyV1LastShown');
         }
 
         const [lastShown,enabled]=await Promise.all([
-          AsyncStorage.getItem('atlasDailyLastShown'),
-          AsyncStorage.getItem('atlasDailyEnabled')
+          AsyncStorage.getItem('atlasDailyV1LastShown'),
+          AsyncStorage.getItem('atlasDailyV1Enabled')
         ]);
 
         if(
@@ -978,7 +978,7 @@ export default function Discover(){
   async function closeAtlasDaily(){
     try{
       await AsyncStorage.setItem(
-        'atlasDailyLastShown',
+        'atlasDailyV1LastShown',
         atlasDailyDateKey()
       );
     }finally{
@@ -989,9 +989,9 @@ export default function Discover(){
   async function disableAtlasDaily(){
     try{
       await Promise.all([
-        AsyncStorage.setItem('atlasDailyEnabled','false'),
+        AsyncStorage.setItem('atlasDailyV1Enabled','false'),
         AsyncStorage.setItem(
-          'atlasDailyLastShown',
+          'atlasDailyV1LastShown',
           atlasDailyDateKey()
         )
       ]);

@@ -750,10 +750,7 @@ export default function Discover(){
   }
 
   return (
-    <Screen
-      eyebrow="ATLAS DAILY DISCOVERY"
-      title="People worth considering"
-    >
+    <Screen eyebrow="ATLAS DAILY DISCOVERY">
       <Modal
         visible={preferencesOpen}
         transparent
@@ -1435,40 +1432,74 @@ export default function Discover(){
             </View>
           </View>
         </Modal>
-        <View style={{
-          flexDirection:'row',
-          alignItems:'center',
-          justifyContent:'space-between',
-          gap:12
+        <Text style={{
+          color:colors.ink,
+          fontSize:30,
+          lineHeight:36,
+          fontWeight:'800',
+          marginBottom:16
         }}>
-          <View style={{flex:1}}>
-            <Body>
-              A considered set of introductions selected from your profile and Atlas relationship signals.
-            </Body>
-          </View>
+          Daily introductions
+        </Text>
 
-          {d?.eligible?(
+        {d?.eligible?(
           <Pressable
             onPress={()=>setFiltersOpen(v=>!v)}
-            style={{
+            style={({pressed})=>({
+              backgroundColor:pressed
+                ?colors.blue+'16'
+                :colors.blue+'0A',
               borderWidth:1,
-              borderColor:filtersActive?colors.blue:colors.muted,
-              borderRadius:18,
-              paddingHorizontal:13,
-              paddingVertical:8,
-              backgroundColor:filtersActive?colors.blue:colors.card
-            }}
+              borderColor:filtersActive
+                ?colors.blue
+                :colors.line,
+              borderRadius:20,
+              paddingHorizontal:17,
+              paddingVertical:15,
+              marginBottom:16,
+              flexDirection:'row',
+              alignItems:'center',
+              gap:12
+            })}
           >
-            <Text style={{
-              color:filtersActive?'#fff':colors.text,
-              fontWeight:'800',
-              fontSize:13
+            <View style={{
+              width:40,
+              height:40,
+              borderRadius:14,
+              backgroundColor:colors.blue+'18',
+              alignItems:'center',
+              justifyContent:'center'
             }}>
-              {filtersActive?'Filters •':'Filters'}
+              <Text style={{
+                color:colors.blue,
+                fontSize:18,
+                fontWeight:'900'
+              }}>
+                ≡
+              </Text>
+            </View>
+
+            <View style={{flex:1,minWidth:0}}>
+              <Text style={{
+                color:colors.ink,
+                fontSize:15,
+                fontWeight:'900'
+              }}>
+                Discovery preferences
+              </Text>
+
+
+            </View>
+
+            <Text style={{
+              color:colors.blue,
+              fontSize:13,
+              fontWeight:'900'
+            }}>
+              {filtersOpen?'Close':'Adjust ›'}
             </Text>
           </Pressable>
-          ):null}
-        </View>
+        ):null}
 
         {d?.eligible&&filtersOpen?(
           <Card>
@@ -2264,133 +2295,96 @@ export default function Discover(){
               style={{
                 flexDirection:'row',
                 alignItems:'center',
-                marginBottom:12
+                gap:12
               }}
             >
               <View
                 style={{
-                  width:40,
-                  height:40,
-                  borderRadius:20,
+                  width:42,
+                  height:42,
+                  borderRadius:21,
                   backgroundColor:colors.blue,
                   alignItems:'center',
-                  justifyContent:'center',
-                  marginRight:11
+                  justifyContent:'center'
                 }}
               >
-                <Text
-                  style={{
-                    color:'#fff',
-                    fontSize:19,
-                    fontWeight:'900'
-                  }}
-                >
+                <Text style={{
+                  color:'#fff',
+                  fontSize:19,
+                  fontWeight:'900'
+                }}>
                   ✦
                 </Text>
               </View>
 
-              <View style={{flex:1}}>
-                <Text
-                  style={{
-                    color:colors.blue,
-                    fontSize:11,
-                    fontWeight:'900',
-                    letterSpacing:1.1
-                  }}
-                >
-                  ATLAS PATTERNS
+              <View style={{flex:1,minWidth:0}}>
+                <Text style={{
+                  color:colors.ink,
+                  fontSize:15,
+                  fontWeight:'900',
+                  marginTop:2
+                }}>
+                  Atlas noticed a pattern
                 </Text>
 
                 <Text
                   style={{
-                    color:colors.ink,
-                    fontSize:18,
-                    fontWeight:'900',
-                    marginTop:2
+                    color:colors.muted,
+                    fontSize:12,
+                    lineHeight:17,
+                    fontWeight:'600',
+                    marginTop:3
                   }}
                 >
-                  Atlas has noticed a pattern
+                  {atlasPatterns[0].label} is standing out.
                 </Text>
               </View>
-            </View>
 
-            <Text
-              style={{
-                color:colors.muted,
-                fontSize:14,
-                lineHeight:20,
-                marginBottom:10
-              }}
-            >
-              {atlasPatterns[0].label} has stood out in{' '}
-              {atlasPatterns[0].count} introductions you've responded
-              positively to.
-            </Text>
-
-            <Text
-              style={{
-                color:colors.muted,
-                fontSize:12,
-                lineHeight:18,
-                marginBottom:14
-              }}
-            >
-              {atlasPatterns[0].actionable
-                ?'Atlas can suggest a related Discovery preference, but nothing changes unless you choose it.'
-                :"This is an observation only. Atlas hasn't changed your Discovery preferences."}
-            </Text>
-
-            {atlasPatterns[0].actionable?(
-              <Pressable
-                onPress={()=>
-                  void openDiscoveryPreferences({
-                    label:atlasPatterns[0].label,
-                    count:atlasPatterns[0].count
-                  })
-                }
-                style={{
-                  backgroundColor:colors.blue,
-                  borderRadius:16,
-                  paddingVertical:12,
-                  alignItems:'center',
-                  marginBottom:8
-                }}
-              >
-                <Text
+              {atlasPatterns[0].actionable?(
+                <Pressable
+                  onPress={()=>
+                    void openDiscoveryPreferences({
+                      label:atlasPatterns[0].label,
+                      count:atlasPatterns[0].count
+                    })
+                  }
                   style={{
-                    color:'#fff',
-                    fontSize:13,
-                    fontWeight:'900'
+                    paddingVertical:10,
+                    paddingLeft:8
                   }}
                 >
-                  Review this preference
-                </Text>
-              </Pressable>
-            ):null}
-
-            <Pressable
-              disabled={patternBusy}
-              onPress={()=>
-                void dismissAtlasPattern(
-                  atlasPatterns[0].reason
-                )
-              }
-              style={{
-                alignItems:'center',
-                paddingVertical:9,
-                opacity:patternBusy?0.6:1
-              }}
-            >
-              <Text
-                style={{
-                  color:colors.muted,
-                  fontSize:12,
-                  fontWeight:'700'
-                }}
-              >
-                {patternBusy?'Updating...':'Not now'}
-              </Text>
-            </Pressable>
+                  <Text style={{
+                    color:colors.blue,
+                    fontSize:13,
+                    fontWeight:'900'
+                  }}>
+                    Review ›
+                  </Text>
+                </Pressable>
+              ):(
+                <Pressable
+                  disabled={patternBusy}
+                  onPress={()=>
+                    void dismissAtlasPattern(
+                      atlasPatterns[0].reason
+                    )
+                  }
+                  style={{
+                    paddingVertical:10,
+                    paddingLeft:8,
+                    opacity:patternBusy?0.6:1
+                  }}
+                >
+                  <Text style={{
+                    color:colors.muted,
+                    fontSize:12,
+                    fontWeight:'800'
+                  }}>
+                    {patternBusy?'...':'Dismiss'}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
           </View>
         ):null}
 

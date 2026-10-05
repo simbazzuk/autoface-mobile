@@ -829,7 +829,7 @@ export default function MembershipScreen(){
                     }
                     style={{
                       borderWidth:1,
-                      borderColor:colors.blue,
+                      borderColor:colors.pink,
                       borderRadius:16,
                       paddingVertical:14,
                       paddingHorizontal:18,
@@ -838,7 +838,7 @@ export default function MembershipScreen(){
                   >
                     <Text
                       style={{
-                        color:colors.blue,
+                        color:colors.pink,
                         fontSize:14,
                         fontWeight:'900'
                       }}

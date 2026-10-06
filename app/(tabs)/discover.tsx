@@ -17,6 +17,7 @@ import {useAppTheme} from '@/src/context/Theme';
 import {auth} from '@/src/lib/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {AtlasDailyModal,atlasDailyDateKey} from '@/src/components/AtlasDaily';
+import {DiscoveryLifestylePreferences} from '@/src/components/DiscoveryLifestylePreferences';
 
 
 
@@ -141,6 +142,12 @@ type SharedInterestImportance=
   |'preference'
   |'important';
 
+type PreferenceImportance=
+  |'doesnt_matter'
+  |'preference'
+  |'important'
+  |'essential';
+
 type DiscoveryPreferences={
   uid:string;
   minAge:number;
@@ -157,6 +164,24 @@ type DiscoveryPreferences={
   introductionLocation:string;
   sharedInterestPreference:SharedInterestImportance;
   preferredSharedInterests:string[];
+
+  preferredReligions:string[];
+  religionImportance:PreferenceImportance;
+
+  preferredDiets:string[];
+  dietImportance:PreferenceImportance;
+
+  preferredDrinking:string[];
+  drinkingImportance:PreferenceImportance;
+
+  preferredSmoking:string[];
+  smokingImportance:PreferenceImportance;
+
+  preferredChildren:string[];
+  childrenImportance:PreferenceImportance;
+
+  preferredWantsChildren:string[];
+  wantsChildrenImportance:PreferenceImportance;
 };
 
 type DiscoveryPreferencesResponse={
@@ -207,6 +232,33 @@ export default function Discover(){
 
   const [preferredSharedInterests,setPreferredSharedInterests]=
     useState<string[]>([]);
+
+  const [preferredReligions,setPreferredReligions]=useState<string[]>([]);
+  const [religionImportance,setReligionImportance]=
+    useState<PreferenceImportance>('doesnt_matter');
+
+  const [preferredDiets,setPreferredDiets]=useState<string[]>([]);
+  const [dietImportance,setDietImportance]=
+    useState<PreferenceImportance>('doesnt_matter');
+
+  const [preferredDrinking,setPreferredDrinking]=useState<string[]>([]);
+  const [drinkingImportance,setDrinkingImportance]=
+    useState<PreferenceImportance>('doesnt_matter');
+
+  const [preferredSmoking,setPreferredSmoking]=useState<string[]>([]);
+  const [smokingImportance,setSmokingImportance]=
+    useState<PreferenceImportance>('doesnt_matter');
+
+  const [preferredChildren,setPreferredChildren]=useState<string[]>([]);
+  const [childrenImportance,setChildrenImportance]=
+    useState<PreferenceImportance>('doesnt_matter');
+
+  const [preferredWantsChildren,setPreferredWantsChildren]=useState<string[]>([]);
+  const [wantsChildrenImportance,setWantsChildrenImportance]=
+    useState<PreferenceImportance>('doesnt_matter');
+
+  const [expandedLifestylePreference,setExpandedLifestylePreference]=
+    useState<string|null>(null);
 
   const [atlasPreferenceReason,setAtlasPreferenceReason]=
     useState<{label:string;count:number}|null>(null);
@@ -682,6 +734,62 @@ export default function Discover(){
           ?result.preferences.preferredSharedInterests
           :[]
       );
+
+      setPreferredReligions(
+        Array.isArray(result.preferences.preferredReligions)
+          ?result.preferences.preferredReligions
+          :[]
+      );
+      setReligionImportance(
+        result.preferences.religionImportance ?? 'doesnt_matter'
+      );
+
+      setPreferredDiets(
+        Array.isArray(result.preferences.preferredDiets)
+          ?result.preferences.preferredDiets
+          :[]
+      );
+      setDietImportance(
+        result.preferences.dietImportance ?? 'doesnt_matter'
+      );
+
+      setPreferredDrinking(
+        Array.isArray(result.preferences.preferredDrinking)
+          ?result.preferences.preferredDrinking
+          :[]
+      );
+      setDrinkingImportance(
+        result.preferences.drinkingImportance ?? 'doesnt_matter'
+      );
+
+      setPreferredSmoking(
+        Array.isArray(result.preferences.preferredSmoking)
+          ?result.preferences.preferredSmoking
+          :[]
+      );
+      setSmokingImportance(
+        result.preferences.smokingImportance ?? 'doesnt_matter'
+      );
+
+      setPreferredChildren(
+        Array.isArray(result.preferences.preferredChildren)
+          ?result.preferences.preferredChildren
+          :[]
+      );
+      setChildrenImportance(
+        result.preferences.childrenImportance ?? 'doesnt_matter'
+      );
+
+      setPreferredWantsChildren(
+        Array.isArray(result.preferences.preferredWantsChildren)
+          ?result.preferences.preferredWantsChildren
+          :[]
+      );
+      setWantsChildrenImportance(
+        result.preferences.wantsChildrenImportance ?? 'doesnt_matter'
+      );
+
+      setExpandedLifestylePreference(null);
     }catch(e){
       setPreferencesError(
         e instanceof Error
@@ -731,7 +839,43 @@ export default function Discover(){
             preferredSharedInterests:
               sharedInterestPreference==='doesnt_matter'
                 ?[]
-                :preferredSharedInterests
+                :preferredSharedInterests,
+
+            preferredReligions,
+            religionImportance:
+              preferredReligions.length>0
+                ?religionImportance
+                :'doesnt_matter',
+
+            preferredDiets,
+            dietImportance:
+              preferredDiets.length>0
+                ?dietImportance
+                :'doesnt_matter',
+
+            preferredDrinking,
+            drinkingImportance:
+              preferredDrinking.length>0
+                ?drinkingImportance
+                :'doesnt_matter',
+
+            preferredSmoking,
+            smokingImportance:
+              preferredSmoking.length>0
+                ?smokingImportance
+                :'doesnt_matter',
+
+            preferredChildren,
+            childrenImportance:
+              preferredChildren.length>0
+                ?childrenImportance
+                :'doesnt_matter',
+
+            preferredWantsChildren,
+            wantsChildrenImportance:
+              preferredWantsChildren.length>0
+                ?wantsChildrenImportance
+                :'doesnt_matter'
           })
         }
       );
@@ -936,6 +1080,41 @@ export default function Discover(){
                 </Text>
               ):(
                 <>
+                  <DiscoveryLifestylePreferences
+                    expanded={expandedLifestylePreference}
+                    onExpandedChange={setExpandedLifestylePreference}
+
+                    preferredReligions={preferredReligions}
+                    setPreferredReligions={setPreferredReligions}
+                    religionImportance={religionImportance}
+                    setReligionImportance={setReligionImportance}
+
+                    preferredDiets={preferredDiets}
+                    setPreferredDiets={setPreferredDiets}
+                    dietImportance={dietImportance}
+                    setDietImportance={setDietImportance}
+
+                    preferredDrinking={preferredDrinking}
+                    setPreferredDrinking={setPreferredDrinking}
+                    drinkingImportance={drinkingImportance}
+                    setDrinkingImportance={setDrinkingImportance}
+
+                    preferredSmoking={preferredSmoking}
+                    setPreferredSmoking={setPreferredSmoking}
+                    smokingImportance={smokingImportance}
+                    setSmokingImportance={setSmokingImportance}
+
+                    preferredChildren={preferredChildren}
+                    setPreferredChildren={setPreferredChildren}
+                    childrenImportance={childrenImportance}
+                    setChildrenImportance={setChildrenImportance}
+
+                    preferredWantsChildren={preferredWantsChildren}
+                    setPreferredWantsChildren={setPreferredWantsChildren}
+                    wantsChildrenImportance={wantsChildrenImportance}
+                    setWantsChildrenImportance={setWantsChildrenImportance}
+                  />
+
                   <Text style={{
                     color:colors.ink,
                     fontSize:17,

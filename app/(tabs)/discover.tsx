@@ -477,7 +477,7 @@ export default function Discover(){
       setFeedbackReasons([]);
 
       setChoiceMessage(
-        'Thanks — Atlas will keep this feedback for future Discovery improvements.'
+        'Thanks — Atlas will use supported feedback to improve future Discovery personalisation.'
       );
 
       void loadAtlasPatterns();

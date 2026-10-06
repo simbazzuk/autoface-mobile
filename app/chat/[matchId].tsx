@@ -987,114 +987,6 @@ export default function Chat(){
               </View>
             </View>
 
-            <View
-              style={[
-                s.divider,
-                {backgroundColor:colors.line}
-              ]}
-            />
-
-            <View style={{
-              flexDirection:'row',
-              alignItems:'flex-start',
-              gap:10
-            }}>
-              <View style={{flex:1,minWidth:0}}>
-                <Text style={[
-                  s.trustValue,
-                  {color:colors.ink}
-                ]}>
-                  {data.other.compatibilityScore??'-'}%
-                </Text>
-                <Text style={[
-                  s.small,
-                  {color:colors.muted}
-                ]}>
-                  Atlas
-                </Text>
-              </View>
-
-              <View style={{flex:1,minWidth:0}}>
-                <Text style={[
-                  s.trustValue,
-                  {color:colors.ink}
-                ]}>
-                  {data.other.authenticityScore??'-'}%
-                </Text>
-                <Text style={[
-                  s.small,
-                  {color:colors.muted}
-                ]}>
-                  Authenticity
-                </Text>
-              </View>
-
-              <View style={{
-                flex:1,
-                minWidth:0,
-                alignItems:'flex-end'
-              }}>
-                <View style={{
-                  alignSelf:'stretch',
-                  backgroundColor:data.messaging.locked
-                    ?colors.photo
-                    :colors.blue,
-                  borderRadius:999,
-                  paddingVertical:8,
-                  paddingHorizontal:8,
-                  alignItems:'center',
-                  justifyContent:'center'
-                }}>
-                  <Text
-                    numberOfLines={2}
-                    style={{
-                      color:data.messaging.locked
-                        ?colors.rose
-                        :'#FFFFFF',
-                      fontSize:11,
-                      lineHeight:14,
-                      fontWeight:'900',
-                      textAlign:'center'
-                    }}
-                  >
-                    {data.messaging.unlimited
-                      ?'Unlimited chat'
-                      :data.messaging.locked
-                        ?'Messaging paused'
-                        :`${data.messaging.remaining??0} free left`}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {data.relationshipInsight?.available?(
-              <Pressable
-                onPress={()=>
-                  router.push(
-                    `/relationship-insight/${encodeURIComponent(matchId)}` as any
-                  )
-                }
-                style={{
-                  marginTop:14,
-                  backgroundColor:colors.pink,
-                  borderWidth:1,
-                  borderColor:colors.pink,
-                  borderRadius:16,
-                  paddingVertical:12,
-                  paddingHorizontal:16,
-                  alignItems:'center',
-                  justifyContent:'center'
-                }}
-              >
-                <Text style={{
-                  color:'#FFFFFF',
-                  fontSize:13,
-                  fontWeight:'900'
-                }}>
-                  ✦ View relationship insight
-                </Text>
-              </Pressable>
-            ):null}
           </View>
         ):null}
 
@@ -1193,6 +1085,7 @@ export default function Chat(){
                         s.connectionJourneyStepText,
                         {color:colors.text}
                       ]}
+                      numberOfLines={2}
                     >
                       {connectionJourney.steps[connectionJourney.stage]}
                       <Text
@@ -2671,10 +2564,11 @@ export default function Chat(){
 const s=StyleSheet.create({
   connectionJourneyCard:{
     borderWidth:1,
-    borderRadius:18,
-    padding:16,
-    marginTop:12,
-    marginBottom:12
+    borderRadius:14,
+    paddingHorizontal:12,
+    paddingVertical:10,
+    marginTop:8,
+    marginBottom:8
   },
   connectionJourneyHeader:{
     flexDirection:'row',
@@ -2689,9 +2583,9 @@ const s=StyleSheet.create({
     letterSpacing:.8
   },
   connectionJourneyTitle:{
-    marginTop:3,
-    fontSize:18,
-    lineHeight:23,
+    marginTop:2,
+    fontSize:15,
+    lineHeight:19,
     fontWeight:'900'
   },
   connectionJourneyAtlas:{
@@ -2701,10 +2595,10 @@ const s=StyleSheet.create({
     letterSpacing:.8
   },
   connectionJourneyCompact:{
-    marginTop:12,
+    marginTop:7,
     flexDirection:'row',
     alignItems:'center',
-    gap:10
+    gap:8
   },
   connectionJourneyCompactMomentum:{
     marginTop:2,
@@ -2714,8 +2608,8 @@ const s=StyleSheet.create({
   },
   connectionJourneyToggle:{
     alignSelf:'flex-end',
-    marginTop:10,
-    paddingVertical:2
+    marginTop:4,
+    paddingVertical:1
   },
   connectionJourneyToggleText:{
     fontSize:12,
@@ -3011,7 +2905,7 @@ const s=StyleSheet.create({
     flex:1
   },
   list:{
-    paddingTop:8,
+    paddingTop:16,
     paddingBottom:20,
     gap:5,
     flexGrow:1

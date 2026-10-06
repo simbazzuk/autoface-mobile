@@ -234,6 +234,12 @@ export default function Chat(){
   const [coachRound,setCoachRound]=useState(0);
   const [journeyOpen,setJourneyOpen]=useState(false);
 
+  const [conversationReflection,setConversationReflection]=useState<
+    'comfortable'|'interesting'|'unsure'|'not_for_me'|null
+  >(null);
+
+  const [reflectionBusy,setReflectionBusy]=useState(false);
+
   const [coachStatus,setCoachStatus]=useState<AtlasCoachStatus|null>(null);
   const [coach,setCoach]=useState<AtlasCoachResult|null>(null);
   const [coachBusy,setCoachBusy]=useState(false);
@@ -329,6 +335,60 @@ export default function Chat(){
 
   const messages=data?.messages??[];
 
+  async function saveConversationReflection(
+    reflection:'comfortable'|'interesting'|'unsure'|'not_for_me'
+  ){
+    if(!matchId||reflectionBusy)return;
+
+    const previous=conversationReflection;
+
+    setConversationReflection(reflection);
+    setReflectionBusy(true);
+
+    try{
+      await api('/api/conversation-reflection',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          matchId,
+          reflection
+        })
+      });
+    }catch{
+      setConversationReflection(previous);
+    }finally{
+      setReflectionBusy(false);
+    }
+  }
+
+  useEffect(()=>{
+    if(!matchId)return;
+
+    let cancelled=false;
+
+    void api<{reflection:
+      |'comfortable'
+      |'interesting'
+      |'unsure'
+      |'not_for_me'
+      |null
+    }>(
+      `/api/conversation-reflection?matchId=${encodeURIComponent(matchId)}`
+    )
+      .then(result=>{
+        if(!cancelled){
+          setConversationReflection(result.reflection);
+        }
+      })
+      .catch(()=>{
+        // Reflection is optional; conversation remains usable.
+      });
+
+    return()=>{
+      cancelled=true;
+    };
+  },[matchId]);
+
   const connectionJourney=useMemo(()=>{
     const realMessages=messages.filter(
       message=>!message.pending&&!message.failed
@@ -416,23 +476,48 @@ export default function Chat(){
                 detail:`${data?.other.firstName?.trim()||'Your connection'} has opened the conversation. Atlas can help you shape a reply in your own voice.`,
                 action:'reply' as const
               }
-            :sustained
+            :conversationReflection==='not_for_me'
               ?{
-                  title:'Go a little deeper',
-                  detail:'You have an active two-way conversation. Atlas can suggest a thoughtful way to keep exploring it.',
-                  action:'starters' as const
+                  title:'Trust how you feel',
+                  detail:"You don't need to continue a conversation that doesn't feel right for you.",
+                  action:'none' as const
                 }
-              :{
-                  title:'Explore common ground',
-                  detail:'You are both participating. Atlas can suggest something natural to explore next.',
-                  action:'starters' as const
-                };
+              :conversationReflection==='unsure'
+                ?{
+                    title:'Keep it light',
+                    detail:'There is no need to decide anything yet. Keep the conversation comfortable and at your own pace.',
+                    action:'starters' as const
+                  }
+                :conversationReflection==='interesting'
+                  ?{
+                      title:'Explore what interests you',
+                      detail:'You marked this conversation as interesting. Atlas can help you explore a genuine topic a little further.',
+                      action:'starters' as const
+                    }
+                  :conversationReflection==='comfortable'
+                    ?{
+                        title:'Continue naturally',
+                        detail:'You marked this conversation as comfortable. Keep following the conversation at a pace that feels natural.',
+                        action:'starters' as const
+                      }
+                    :sustained
+                      ?{
+                          title:'Go a little deeper',
+                          detail:'You have an active two-way conversation. Atlas can suggest a thoughtful way to keep exploring it.',
+                          action:'starters' as const
+                        }
+                      :{
+                          title:'Explore common ground',
+                          detail:'You are both participating. Atlas can suggest something natural to explore next.',
+                          action:'starters' as const
+                        };
 
     return{
       stage,
       suggestion,
       momentum,
       nextStep,
+      bothParticipated,
       steps:[
         'Connected',
         'Conversation started',
@@ -440,7 +525,12 @@ export default function Chat(){
         'Building the conversation'
       ]
     };
-  },[messages,user?.uid,data?.other.firstName]);
+  },[
+    messages,
+    user?.uid,
+    data?.other.firstName,
+    conversationReflection
+  ]);
 
   useEffect(()=>{
     let active=true;
@@ -534,13 +624,14 @@ export default function Chat(){
 
     if(action==='none')return;
 
-    setAtlasMode(action);
-    setCoachOpen(true);
+    // iOS should not present the Atlas modal while the Journey
+    // modal is still being dismissed.
+    setJourneyOpen(false);
 
-    setTimeout(
-      ()=>list.current?.scrollToEnd({animated:true}),
-      100
-    );
+    setTimeout(()=>{
+      setAtlasMode(action);
+      setCoachOpen(true);
+    },350);
   }
 
   function useAtlasSuggestion(suggestion:string){
@@ -1080,8 +1171,7 @@ export default function Chat(){
               </Text>
             </View>
 
-            {!journeyOpen?(
-              <>
+            <>
                 <View style={s.connectionJourneyCompact}>
                   <View
                     style={[
@@ -1129,29 +1219,90 @@ export default function Chat(){
                   </Text>
                 </Pressable>
               </>
-            ):(
-              <>
-                <Pressable
-                  onPress={()=>setJourneyOpen(false)}
-                  hitSlop={8}
+
+              <Modal
+                visible={journeyOpen}
+                animationType="slide"
+                presentationStyle="fullScreen"
+                onRequestClose={()=>setJourneyOpen(false)}
+              >
+                <SafeAreaView
                   style={{
-                    alignSelf:'flex-end',
-                    marginTop:2,
-                    marginBottom:10,
-                    paddingVertical:4,
-                    paddingHorizontal:2
+                    flex:1,
+                    backgroundColor:colors.bg
                   }}
                 >
-                  <Text
+                  <View
                     style={{
-                      color:colors.blue,
-                      fontSize:12,
-                      fontWeight:'800'
+                      flexDirection:'row',
+                      alignItems:'center',
+                      justifyContent:'space-between',
+                      paddingHorizontal:20,
+                      paddingTop:10,
+                      paddingBottom:14,
+                      borderBottomWidth:1,
+                      borderBottomColor:colors.line
                     }}
                   >
-                    Hide journey ↑
-                  </Text>
-                </Pressable>
+                    <View style={{flex:1}}>
+                      <Text
+                        style={{
+                          color:colors.blue,
+                          fontSize:11,
+                          fontWeight:'900',
+                          letterSpacing:.8
+                        }}
+                      >
+                        YOUR CONNECTION · ATLAS
+                      </Text>
+
+                      <Text
+                        style={{
+                          color:colors.text,
+                          fontSize:22,
+                          lineHeight:28,
+                          fontWeight:'900',
+                          marginTop:3
+                        }}
+                      >
+                        Conversation journey
+                      </Text>
+                    </View>
+
+                    <Pressable
+                      onPress={()=>setJourneyOpen(false)}
+                      hitSlop={10}
+                      style={{
+                        marginLeft:12,
+                        borderWidth:1,
+                        borderColor:colors.blue,
+                        borderRadius:18,
+                        paddingHorizontal:14,
+                        paddingVertical:8
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color:colors.blue,
+                          fontSize:12,
+                          fontWeight:'900'
+                        }}
+                      >
+                        ✕ Close
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  <ScrollView
+                    style={{flex:1}}
+                    contentContainerStyle={{
+                      paddingHorizontal:20,
+                      paddingTop:20,
+                      paddingBottom:80
+                    }}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator
+                  >
 
                 <View style={s.connectionJourneySteps}>
                   {connectionJourney.steps.map((step,index)=>{
@@ -1233,6 +1384,106 @@ export default function Chat(){
                   </Text>
                 </View>
 
+                {connectionJourney.bothParticipated?(
+                  <View
+                    style={[
+                      s.conversationReflection,
+                      {borderTopColor:colors.line}
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        s.conversationReflectionLabel,
+                        {color:colors.blue}
+                      ]}
+                    >
+                      CONVERSATION REFLECTION
+                    </Text>
+
+                    <Text
+                      style={[
+                        s.conversationReflectionTitle,
+                        {color:colors.text}
+                      ]}
+                    >
+                      How is this conversation feeling for you?
+                    </Text>
+
+                    <Text
+                      style={[
+                        s.conversationReflectionDetail,
+                        {color:colors.muted}
+                      ]}
+                    >
+                      Optional and private to you. Atlas does not infer this from your messages.
+                    </Text>
+
+                    <View style={s.conversationReflectionOptions}>
+                      {[
+                        ['comfortable','Comfortable'],
+                        ['interesting','Interesting'],
+                        ['unsure','Unsure'],
+                        ['not_for_me','Not for me']
+                      ].map(([value,label])=>{
+                        const selected=
+                          conversationReflection===value;
+
+                        return(
+                          <Pressable
+                            key={value}
+                            disabled={reflectionBusy}
+                            onPress={()=>
+                              void saveConversationReflection(
+                                value as
+                                  |'comfortable'
+                                  |'interesting'
+                                  |'unsure'
+                                  |'not_for_me'
+                              )
+                            }
+                            style={[
+                              s.conversationReflectionOption,
+                              {
+                                borderColor:selected
+                                  ?colors.blue
+                                  :colors.line,
+                                backgroundColor:selected
+                                  ?colors.blue
+                                  :colors.card,
+                                opacity:reflectionBusy?.7:1
+                              }
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                s.conversationReflectionOptionText,
+                                {
+                                  color:selected
+                                    ?'#FFFFFF'
+                                    :colors.text
+                                }
+                              ]}
+                            >
+                              {label}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+
+                    {conversationReflection?(
+                      <Text
+                        style={[
+                          s.conversationReflectionSaved,
+                          {color:colors.muted}
+                        ]}
+                      >
+                        ✓ Reflection saved privately
+                      </Text>
+                    ):null}
+                  </View>
+                ):null}
+
                 <View
                   style={[
                     s.atlasNextStep,
@@ -1302,47 +1553,10 @@ export default function Chat(){
                   )}
                 </View>
 
-                <View
-                  style={[
-                    s.connectionJourneySuggestion,
-                    {backgroundColor:colors.photo}
-                  ]}
-                >
-                  <Text
-                    style={[
-                      s.connectionJourneySuggestionLabel,
-                      {color:colors.blue}
-                    ]}
-                  >
-                    ✦ ATLAS SUGGESTION
-                  </Text>
 
-                  <Text
-                    style={[
-                      s.connectionJourneySuggestionText,
-                      {color:colors.text}
-                    ]}
-                  >
-                    {connectionJourney.suggestion}
-                  </Text>
-                </View>
-
-                <Pressable
-                  onPress={()=>setJourneyOpen(false)}
-                  hitSlop={8}
-                  style={s.connectionJourneyToggle}
-                >
-                  <Text
-                    style={[
-                      s.connectionJourneyToggleText,
-                      {color:colors.blue}
-                    ]}
-                  >
-                    Hide journey
-                  </Text>
-                </Pressable>
-              </>
-            )}
+                  </ScrollView>
+                </SafeAreaView>
+              </Modal>
           </View>
         ):null}
 
@@ -2559,6 +2773,52 @@ const s=StyleSheet.create({
     fontSize:12,
     lineHeight:18,
     fontWeight:'600'
+  },
+  conversationReflection:{
+    marginTop:15,
+    paddingTop:14,
+    borderTopWidth:1
+  },
+  conversationReflectionLabel:{
+    fontSize:10,
+    lineHeight:13,
+    fontWeight:'900',
+    letterSpacing:.7
+  },
+  conversationReflectionTitle:{
+    marginTop:5,
+    fontSize:15,
+    lineHeight:20,
+    fontWeight:'900'
+  },
+  conversationReflectionDetail:{
+    marginTop:3,
+    fontSize:11,
+    lineHeight:16,
+    fontWeight:'600'
+  },
+  conversationReflectionOptions:{
+    flexDirection:'row',
+    flexWrap:'wrap',
+    gap:8,
+    marginTop:11
+  },
+  conversationReflectionOption:{
+    borderWidth:1,
+    borderRadius:999,
+    paddingHorizontal:12,
+    paddingVertical:8
+  },
+  conversationReflectionOptionText:{
+    fontSize:11,
+    lineHeight:15,
+    fontWeight:'800'
+  },
+  conversationReflectionSaved:{
+    marginTop:9,
+    fontSize:10,
+    lineHeight:14,
+    fontWeight:'700'
   },
   atlasNextStep:{
     marginTop:15,

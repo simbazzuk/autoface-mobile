@@ -22,6 +22,24 @@ type Dimension={
   explanation:string;
 };
 
+type ProfileIndicator={
+  key:string;
+  label:string;
+  score:number;
+  status:"STRONG"|"GOOD"|"NEUTRAL"|"EXPLORE";
+  explanation:string;
+  evidence:string[];
+};
+
+type ProfileIntelligence={
+  headline:string;
+  indicators:ProfileIndicator[];
+  heightEvidence:string[];
+  strongestProfileSignals:string[];
+  thingsToExplore:string[];
+  notice:string;
+};
+
 type Insight={
   available:boolean;
   compatibilityScore?:number;
@@ -33,6 +51,7 @@ type Insight={
   confidenceScore?:number;
   summary?:string;
   notice?:string;
+  profileIntelligence?:ProfileIntelligence;
 };
 
 type AtlasDeepInsightResponse={
@@ -191,6 +210,17 @@ export default function RelationshipInsight(){
 
   const dimensions=[...(insight.dimensions??[])]
     .sort((a,b)=>b.score-a.score);
+
+  const profileIndicators=[...(insight.profileIntelligence?.indicators??[])]
+    .filter(item=>
+      item.key==="stated_preferences" ||
+      item.status!=="NEUTRAL"
+    )
+    .sort((a,b)=>{
+      if(a.key==="stated_preferences")return -1;
+      if(b.key==="stated_preferences")return 1;
+      return b.score-a.score;
+    });
 
   return(
     <Screen eyebrow="ATLAS" title="Relationship insight">
@@ -359,6 +389,97 @@ export default function RelationshipInsight(){
                 </Text>
               </View>
             ))}
+          </Section>
+        ):null}
+
+        {profileIndicators.length?(
+          <Section
+            title="PROFILE & PREFERENCE FIT"
+            colors={colors}
+          >
+            <Text style={{
+              color:colors.muted,
+              fontSize:12,
+              lineHeight:18
+            }}>
+              How this connection aligns with profile details and preferences you explicitly set.
+            </Text>
+
+            {profileIndicators.map(item=>(
+              <View
+                key={item.key}
+                style={{gap:6}}
+              >
+                <View style={{
+                  flexDirection:'row',
+                  alignItems:'center',
+                  justifyContent:'space-between',
+                  gap:12
+                }}>
+                  <Text style={{
+                    flex:1,
+                    color:colors.text,
+                    fontWeight:'800',
+                    fontSize:14
+                  }}>
+                    {item.label}
+                  </Text>
+
+                  <Text style={{
+                    color:colors.blue,
+                    fontWeight:'900',
+                    fontSize:11
+                  }}>
+                    {item.status}
+                  </Text>
+                </View>
+
+                <Text style={{
+                  color:colors.muted,
+                  fontSize:12,
+                  lineHeight:18
+                }}>
+                  {item.explanation}
+                </Text>
+
+                {item.evidence
+                  ?.filter(evidence=>evidence!==item.explanation)
+                  .map((evidence,index)=>(
+                  <View
+                    key={`${item.key}-${index}`}
+                    style={{
+                      flexDirection:'row',
+                      alignItems:'flex-start',
+                      gap:8
+                    }}
+                  >
+                    <Text style={{
+                      color:colors.blue,
+                      fontWeight:'900'
+                    }}>
+                      ✓
+                    </Text>
+
+                    <Text style={{
+                      flex:1,
+                      color:colors.text,
+                      fontSize:12,
+                      lineHeight:18
+                    }}>
+                      {evidence}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ))}
+
+            <Text style={{
+              color:colors.muted,
+              fontSize:11,
+              lineHeight:16
+            }}>
+              These signals add context and do not change your {score}% compatibility score.
+            </Text>
           </Section>
         ):null}
 

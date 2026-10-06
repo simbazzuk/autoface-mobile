@@ -765,11 +765,11 @@ export default function Discover(){
 
           // Development only: show Atlas Daily again on a fresh visit.
           if (__DEV__) {
-            await AsyncStorage.removeItem('atlasDailyV1LastShown');
+            await AsyncStorage.removeItem('atlasDailyV2LastShown');
           }
 
           const lastShown=await AsyncStorage.getItem(
-            'atlasDailyV1LastShown'
+            'atlasDailyV2LastShown'
           );
 
           if(
@@ -792,7 +792,7 @@ export default function Discover(){
   async function closeAtlasDaily(){
     try{
       await AsyncStorage.setItem(
-        'atlasDailyV1LastShown',
+        'atlasDailyV2LastShown',
         atlasDailyDateKey()
       );
     }finally{

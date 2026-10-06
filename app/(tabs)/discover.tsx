@@ -907,14 +907,19 @@ export default function Discover(){
       async function checkAtlasDaily(){
         try{
           const today=atlasDailyDateKey();
+          const uid=auth?.currentUser?.uid;
+
+          if(!uid)return;
+
+          const storageKey=`atlasDailyV2LastShown:${uid}`;
 
           // Development only: show Atlas Daily again on a fresh visit.
-          if (__DEV__) {
-            await AsyncStorage.removeItem('atlasDailyV2LastShown');
+          if(__DEV__){
+            await AsyncStorage.removeItem(storageKey);
           }
 
           const lastShown=await AsyncStorage.getItem(
-            'atlasDailyV2LastShown'
+            storageKey
           );
 
           if(
@@ -936,10 +941,14 @@ export default function Discover(){
 
   async function closeAtlasDaily(){
     try{
-      await AsyncStorage.setItem(
-        'atlasDailyV2LastShown',
-        atlasDailyDateKey()
-      );
+      const uid=auth?.currentUser?.uid;
+
+      if(uid){
+        await AsyncStorage.setItem(
+          `atlasDailyV2LastShown:${uid}`,
+          atlasDailyDateKey()
+        );
+      }
     }finally{
       setAtlasDailyOpen(false);
     }

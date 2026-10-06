@@ -34,6 +34,14 @@ type Form={
   occupation:string;
   aboutMe:string;
   relationshipIntent:'marriage'|'long_term_relationship'|'serious_relationship';
+  religion:''|'sikh'|'hindu'|'muslim'|'christian'|'buddhist'|'jewish'|'none'|'other'|'prefer_not_to_say';
+  faithImportance:''|'not_important'|'somewhat_important'|'important'|'very_important';
+  diet:''|'vegetarian'|'vegan'|'pescatarian'|'non_vegetarian'|'other'|'prefer_not_to_say';
+  drinking:''|'never'|'occasionally'|'socially'|'regularly'|'prefer_not_to_say';
+  smoking:''|'never'|'occasionally'|'regularly'|'prefer_not_to_say';
+  children:''|'no_children'|'have_children'|'prefer_not_to_say';
+  wantsChildren:''|'yes'|'no'|'open'|'unsure'|'prefer_not_to_say';
+  languages:string;
 };
 
 const empty:Form={
@@ -43,7 +51,15 @@ const empty:Form={
   generalLocation:'',
   occupation:'',
   aboutMe:'',
-  relationshipIntent:'marriage'
+  relationshipIntent:'marriage',
+  religion:'',
+  faithImportance:'',
+  diet:'',
+  drinking:'',
+  smoking:'',
+  children:'',
+  wantsChildren:'',
+  languages:''
 };
 
 const API_BASE=(
@@ -66,6 +82,7 @@ export default function Profile(){
   const [photoBusy,setPhotoBusy]=useState(false);
   const [photoVersion,setPhotoVersion]=useState(Date.now());
   const [photoAuthToken,setPhotoAuthToken]=useState<string|null>(null);
+  const [expandedLifestyle,setExpandedLifestyle]=useState<keyof Form|null>(null);
 
   useEffect(()=>{
     let active=true;
@@ -125,7 +142,38 @@ export default function Profile(){
             p.relationshipIntent==='long_term_relationship'||
             p.relationshipIntent==='serious_relationship'
               ?p.relationshipIntent
-              :'marriage'
+              :'marriage',
+          religion:
+            ['sikh','hindu','muslim','christian','buddhist','jewish','none','other','prefer_not_to_say'].includes(p.religion)
+              ?p.religion
+              :'',
+          faithImportance:
+            ['not_important','somewhat_important','important','very_important'].includes(p.faithImportance)
+              ?p.faithImportance
+              :'',
+          diet:
+            ['vegetarian','vegan','pescatarian','non_vegetarian','other','prefer_not_to_say'].includes(p.diet)
+              ?p.diet
+              :'',
+          drinking:
+            ['never','occasionally','socially','regularly','prefer_not_to_say'].includes(p.drinking)
+              ?p.drinking
+              :'',
+          smoking:
+            ['never','occasionally','regularly','prefer_not_to_say'].includes(p.smoking)
+              ?p.smoking
+              :'',
+          children:
+            ['no_children','have_children','prefer_not_to_say'].includes(p.children)
+              ?p.children
+              :'',
+          wantsChildren:
+            ['yes','no','open','unsure','prefer_not_to_say'].includes(p.wantsChildren)
+              ?p.wantsChildren
+              :'',
+          languages:Array.isArray(p.languages)
+            ?p.languages.filter((x:unknown):x is string=>typeof x==='string').join(', ')
+            :''
         });
       }
 
@@ -412,7 +460,19 @@ export default function Profile(){
             generalLocation:form.generalLocation.trim(),
             occupation:form.occupation.trim(),
             aboutMe:form.aboutMe.trim(),
-            relationshipIntent:form.relationshipIntent
+            relationshipIntent:form.relationshipIntent,
+            ...(form.religion?{religion:form.religion}:{}),
+            ...(form.faithImportance?{faithImportance:form.faithImportance}:{}),
+            ...(form.diet?{diet:form.diet}:{}),
+            ...(form.drinking?{drinking:form.drinking}:{}),
+            ...(form.smoking?{smoking:form.smoking}:{}),
+            ...(form.children?{children:form.children}:{}),
+            ...(form.wantsChildren?{wantsChildren:form.wantsChildren}:{}),
+            languages:form.languages
+              .split(',')
+              .map(x=>x.trim())
+              .filter(Boolean)
+              .slice(0,10)
           }
         })
       });
@@ -894,6 +954,173 @@ export default function Profile(){
         </Card>
 
         <Card>
+          <H2>Lifestyle, faith & family</H2>
+
+          <Body>
+            Optional details that help describe who you are.
+            Tap a category to add or change an answer.
+          </Body>
+
+          <ChoiceGroup
+            label="Religion / faith"
+            field="religion"
+            value={form.religion}
+            expanded={expandedLifestyle==='religion'}
+            onToggle={()=>setExpandedLifestyle(
+              expandedLifestyle==='religion'?null:'religion'
+            )}
+            onSelected={()=>setExpandedLifestyle(null)}
+            options={[
+              ['sikh','Sikh'],
+              ['hindu','Hindu'],
+              ['muslim','Muslim'],
+              ['christian','Christian'],
+              ['buddhist','Buddhist'],
+              ['jewish','Jewish'],
+              ['none','No religion'],
+              ['other','Other'],
+              ['prefer_not_to_say','Prefer not to say']
+            ]}
+            onChange={change}
+          />
+
+          <ChoiceGroup
+            label="Faith importance"
+            field="faithImportance"
+            value={form.faithImportance}
+            expanded={expandedLifestyle==='faithImportance'}
+            onToggle={()=>setExpandedLifestyle(
+              expandedLifestyle==='faithImportance'?null:'faithImportance'
+            )}
+            onSelected={()=>setExpandedLifestyle(null)}
+            options={[
+              ['not_important','Not important'],
+              ['somewhat_important','Somewhat'],
+              ['important','Important'],
+              ['very_important','Very important']
+            ]}
+            onChange={change}
+          />
+
+          <ChoiceGroup
+            label="Diet"
+            field="diet"
+            value={form.diet}
+            expanded={expandedLifestyle==='diet'}
+            onToggle={()=>setExpandedLifestyle(
+              expandedLifestyle==='diet'?null:'diet'
+            )}
+            onSelected={()=>setExpandedLifestyle(null)}
+            options={[
+              ['vegetarian','Vegetarian'],
+              ['vegan','Vegan'],
+              ['pescatarian','Pescatarian'],
+              ['non_vegetarian','Non-vegetarian'],
+              ['other','Other'],
+              ['prefer_not_to_say','Prefer not to say']
+            ]}
+            onChange={change}
+          />
+
+          <ChoiceGroup
+            label="Drinking"
+            field="drinking"
+            value={form.drinking}
+            expanded={expandedLifestyle==='drinking'}
+            onToggle={()=>setExpandedLifestyle(
+              expandedLifestyle==='drinking'?null:'drinking'
+            )}
+            onSelected={()=>setExpandedLifestyle(null)}
+            options={[
+              ['never','Never'],
+              ['occasionally','Occasionally'],
+              ['socially','Socially'],
+              ['regularly','Regularly'],
+              ['prefer_not_to_say','Prefer not to say']
+            ]}
+            onChange={change}
+          />
+
+          <ChoiceGroup
+            label="Smoking"
+            field="smoking"
+            value={form.smoking}
+            expanded={expandedLifestyle==='smoking'}
+            onToggle={()=>setExpandedLifestyle(
+              expandedLifestyle==='smoking'?null:'smoking'
+            )}
+            onSelected={()=>setExpandedLifestyle(null)}
+            options={[
+              ['never','Never'],
+              ['occasionally','Occasionally'],
+              ['regularly','Regularly'],
+              ['prefer_not_to_say','Prefer not to say']
+            ]}
+            onChange={change}
+          />
+
+          <ChoiceGroup
+            label="Children"
+            field="children"
+            value={form.children}
+            expanded={expandedLifestyle==='children'}
+            onToggle={()=>setExpandedLifestyle(
+              expandedLifestyle==='children'?null:'children'
+            )}
+            onSelected={()=>setExpandedLifestyle(null)}
+            options={[
+              ['no_children','No children'],
+              ['have_children','Have children'],
+              ['prefer_not_to_say','Prefer not to say']
+            ]}
+            onChange={change}
+          />
+
+          <ChoiceGroup
+            label="Would you like children?"
+            field="wantsChildren"
+            value={form.wantsChildren}
+            expanded={expandedLifestyle==='wantsChildren'}
+            onToggle={()=>setExpandedLifestyle(
+              expandedLifestyle==='wantsChildren'?null:'wantsChildren'
+            )}
+            onSelected={()=>setExpandedLifestyle(null)}
+            options={[
+              ['yes','Yes'],
+              ['no','No'],
+              ['open','Open to it'],
+              ['unsure','Unsure'],
+              ['prefer_not_to_say','Prefer not to say']
+            ]}
+            onChange={change}
+          />
+
+          <View style={{gap:6}}>
+            <Body>Languages</Body>
+            <Input
+              placeholder="e.g. English, Punjabi"
+              value={form.languages}
+              onChangeText={v=>change('languages',v)}
+            />
+            <Text
+              style={{
+                color:colors.muted,
+                fontSize:12,
+                lineHeight:17
+              }}
+            >
+              Separate multiple languages with commas.
+            </Text>
+          </View>
+
+          <Button
+            title={saving?'Saving...':'Save profile'}
+            disabled={saving}
+            onPress={save}
+          />
+        </Card>
+
+        <Card>
           <H2>Privacy & discovery</H2>
 
           <Body>
@@ -1003,6 +1230,127 @@ export default function Profile(){
         />
       </ScrollView>
     </Screen>
+  );
+}
+
+function ChoiceGroup({
+  label,
+  field,
+  value,
+  options,
+  onChange,
+  expanded,
+  onToggle,
+  onSelected
+}:{
+  label:string;
+  field:keyof Form;
+  value:string;
+  options:readonly (readonly [string,string])[];
+  onChange:(key:keyof Form,value:string)=>void;
+  expanded:boolean;
+  onToggle:()=>void;
+  onSelected:()=>void;
+}){
+  const {colors}=useAppTheme();
+
+  const selectedLabel=
+    options.find(([option])=>option===value)?.[1] ?? 'Not specified';
+
+  return (
+    <View
+      style={{
+        borderBottomWidth:1,
+        borderBottomColor:colors.line,
+        paddingBottom:expanded?14:0
+      }}
+    >
+      <Pressable
+        onPress={onToggle}
+        style={{
+          flexDirection:'row',
+          alignItems:'center',
+          justifyContent:'space-between',
+          paddingVertical:14,
+          gap:12
+        }}
+      >
+        <View style={{flex:1,gap:3}}>
+          <Text
+            style={{
+              color:colors.text,
+              fontSize:15,
+              fontWeight:'600'
+            }}
+          >
+            {label}
+          </Text>
+
+          <Text
+            style={{
+              color:value?colors.blue:colors.muted,
+              fontSize:14,
+              lineHeight:19
+            }}
+          >
+            {selectedLabel}
+          </Text>
+        </View>
+
+        <Text
+          style={{
+            color:colors.blue,
+            fontSize:22,
+            fontWeight:'500'
+          }}
+        >
+          {expanded?'⌃':'›'}
+        </Text>
+      </Pressable>
+
+      {expanded?(
+        <View
+          style={{
+            flexDirection:'row',
+            flexWrap:'wrap',
+            gap:8,
+            paddingBottom:4
+          }}
+        >
+          {options.map(([option,labelText])=>{
+            const selected=value===option;
+
+            return (
+              <Pressable
+                key={option}
+                onPress={()=>{
+                  onChange(field,option);
+                  onSelected();
+                }}
+                style={{
+                  paddingVertical:9,
+                  paddingHorizontal:12,
+                  borderRadius:999,
+                  borderWidth:1,
+                  borderColor:selected?colors.blue:colors.line,
+                  backgroundColor:selected?`${colors.blue}18`:'transparent'
+                }}
+              >
+                <Text
+                  style={{
+                    color:selected?colors.blue:colors.text,
+                    fontWeight:selected?'700':'500',
+                    fontSize:13
+                  }}
+                >
+                  {selected?'✓  ':''}{labelText}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ):null}
+    </View>
   );
 }
 

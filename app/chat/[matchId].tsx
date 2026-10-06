@@ -230,6 +230,7 @@ export default function Chat(){
   // AutoFace 0.1.20 - Atlas Conversation Coach
   const [coachOpen,setCoachOpen]=useState(false);
   const [coachRound,setCoachRound]=useState(0);
+  const [journeyOpen,setJourneyOpen]=useState(false);
 
   const [coachStatus,setCoachStatus]=useState<AtlasCoachStatus|null>(null);
   const [coach,setCoach]=useState<AtlasCoachResult|null>(null);
@@ -368,9 +369,36 @@ export default function Chat(){
             ?'You are both taking part. Explore something you genuinely enjoy talking about.'
             :'You have a longer two-way conversation going. Atlas can help you explore it without forcing the pace.';
 
+    const momentum=
+      realMessages.length===0
+        ?{
+            label:'Ready to start',
+            detail:'Your private conversation is ready when you are.'
+          }
+        :myMessages>0&&theirMessages===0
+          ?{
+              label:'Waiting for a reply',
+              detail:'You have made the first move. Give them space to respond when they are ready.'
+            }
+          :myMessages===0&&theirMessages>0
+            ?{
+                label:'Your turn',
+                detail:`${data?.other.firstName?.trim()||'Your connection'} has started the conversation. Reply when you are ready.`
+              }
+            :sustained
+              ?{
+                  label:'Conversation flowing',
+                  detail:'You are both contributing to a longer two-way conversation.'
+                }
+              :{
+                  label:'Two-way conversation',
+                  detail:'Both of you are contributing to the conversation.'
+                };
+
     return{
       stage,
       suggestion,
+      momentum,
       steps:[
         'Connected',
         'Conversation started',
@@ -974,7 +1002,7 @@ export default function Chat(){
             ]}
           >
             <View style={s.connectionJourneyHeader}>
-              <View>
+              <View style={{flex:1}}>
                 <Text
                   style={[
                     s.connectionJourneyEyebrow,
@@ -1004,76 +1032,178 @@ export default function Chat(){
               </Text>
             </View>
 
-            <View style={s.connectionJourneySteps}>
-              {connectionJourney.steps.map((step,index)=>{
-                const reached=index<=connectionJourney.stage;
-
-                return(
+            {!journeyOpen?(
+              <>
+                <View style={s.connectionJourneyCompact}>
                   <View
-                    key={step}
-                    style={s.connectionJourneyStep}
+                    style={[
+                      s.connectionJourneyDot,
+                      {
+                        borderColor:colors.blue,
+                        backgroundColor:colors.blue
+                      }
+                    ]}
                   >
-                    <View
-                      style={[
-                        s.connectionJourneyDot,
-                        {
-                          borderColor:reached
-                            ?colors.blue
-                            :colors.line,
-                          backgroundColor:reached
-                            ?colors.blue
-                            :'transparent'
-                        }
-                      ]}
-                    >
-                      {reached?(
-                        <Text style={s.connectionJourneyCheck}>
-                          ✓
-                        </Text>
-                      ):null}
-                    </View>
+                    <Text style={s.connectionJourneyCheck}>
+                      ✓
+                    </Text>
+                  </View>
 
+                  <View style={{flex:1}}>
                     <Text
                       style={[
                         s.connectionJourneyStepText,
-                        {
-                          color:reached
-                            ?colors.text
-                            :colors.muted
-                        }
+                        {color:colors.text}
                       ]}
                     >
-                      {step}
+                      {connectionJourney.steps[connectionJourney.stage]}
+                      <Text
+                        style={{color:colors.muted,fontWeight:'600'}}
+                      >
+                        {' · '}{connectionJourney.momentum.label}
+                      </Text>
                     </Text>
                   </View>
-                );
-              })}
-            </View>
+                </View>
 
-            <View
-              style={[
-                s.connectionJourneySuggestion,
-                {backgroundColor:colors.photo}
-              ]}
-            >
-              <Text
-                style={[
-                  s.connectionJourneySuggestionLabel,
-                  {color:colors.blue}
-                ]}
-              >
-                ✦ ATLAS SUGGESTION
-              </Text>
+                <Pressable
+                  onPress={()=>setJourneyOpen(true)}
+                  hitSlop={8}
+                  style={s.connectionJourneyToggle}
+                >
+                  <Text
+                    style={[
+                      s.connectionJourneyToggleText,
+                      {color:colors.blue}
+                    ]}
+                  >
+                    View journey ›
+                  </Text>
+                </Pressable>
+              </>
+            ):(
+              <>
+                <View style={s.connectionJourneySteps}>
+                  {connectionJourney.steps.map((step,index)=>{
+                    const reached=index<=connectionJourney.stage;
 
-              <Text
-                style={[
-                  s.connectionJourneySuggestionText,
-                  {color:colors.text}
-                ]}
-              >
-                {connectionJourney.suggestion}
-              </Text>
-            </View>
+                    return(
+                      <View
+                        key={step}
+                        style={s.connectionJourneyStep}
+                      >
+                        <View
+                          style={[
+                            s.connectionJourneyDot,
+                            {
+                              borderColor:reached
+                                ?colors.blue
+                                :colors.line,
+                              backgroundColor:reached
+                                ?colors.blue
+                                :'transparent'
+                            }
+                          ]}
+                        >
+                          {reached?(
+                            <Text style={s.connectionJourneyCheck}>
+                              ✓
+                            </Text>
+                          ):null}
+                        </View>
+
+                        <Text
+                          style={[
+                            s.connectionJourneyStepText,
+                            {
+                              color:reached
+                                ?colors.text
+                                :colors.muted
+                            }
+                          ]}
+                        >
+                          {step}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+
+                <View
+                  style={[
+                    s.connectionMomentum,
+                    {borderTopColor:colors.line}
+                  ]}
+                >
+                  <Text
+                    style={[
+                      s.connectionMomentumLabel,
+                      {color:colors.blue}
+                    ]}
+                  >
+                    CONVERSATION MOMENTUM
+                  </Text>
+
+                  <Text
+                    style={[
+                      s.connectionMomentumValue,
+                      {color:colors.text}
+                    ]}
+                  >
+                    {connectionJourney.momentum.label}
+                  </Text>
+
+                  <Text
+                    style={[
+                      s.connectionMomentumDetail,
+                      {color:colors.muted}
+                    ]}
+                  >
+                    {connectionJourney.momentum.detail}
+                  </Text>
+                </View>
+
+                <View
+                  style={[
+                    s.connectionJourneySuggestion,
+                    {backgroundColor:colors.photo}
+                  ]}
+                >
+                  <Text
+                    style={[
+                      s.connectionJourneySuggestionLabel,
+                      {color:colors.blue}
+                    ]}
+                  >
+                    ✦ ATLAS SUGGESTION
+                  </Text>
+
+                  <Text
+                    style={[
+                      s.connectionJourneySuggestionText,
+                      {color:colors.text}
+                    ]}
+                  >
+                    {connectionJourney.suggestion}
+                  </Text>
+                </View>
+
+                <Pressable
+                  onPress={()=>setJourneyOpen(false)}
+                  hitSlop={8}
+                  style={s.connectionJourneyToggle}
+                >
+                  <Text
+                    style={[
+                      s.connectionJourneyToggleText,
+                      {color:colors.blue}
+                    ]}
+                  >
+                    Hide journey
+                  </Text>
+                </Pressable>
+              </>
+            )}
           </View>
         ):null}
 
@@ -2150,6 +2280,28 @@ const s=StyleSheet.create({
     fontWeight:'900',
     letterSpacing:.8
   },
+  connectionJourneyCompact:{
+    marginTop:12,
+    flexDirection:'row',
+    alignItems:'center',
+    gap:10
+  },
+  connectionJourneyCompactMomentum:{
+    marginTop:2,
+    fontSize:12,
+    lineHeight:17,
+    fontWeight:'600'
+  },
+  connectionJourneyToggle:{
+    alignSelf:'flex-end',
+    marginTop:10,
+    paddingVertical:2
+  },
+  connectionJourneyToggleText:{
+    fontSize:12,
+    lineHeight:17,
+    fontWeight:'900'
+  },
   connectionJourneySteps:{
     marginTop:14,
     gap:9
@@ -2178,6 +2330,29 @@ const s=StyleSheet.create({
     fontSize:13,
     lineHeight:18,
     fontWeight:'700'
+  },
+  connectionMomentum:{
+    marginTop:15,
+    paddingTop:14,
+    borderTopWidth:1
+  },
+  connectionMomentumLabel:{
+    fontSize:10,
+    lineHeight:13,
+    fontWeight:'900',
+    letterSpacing:.7
+  },
+  connectionMomentumValue:{
+    marginTop:5,
+    fontSize:15,
+    lineHeight:20,
+    fontWeight:'900'
+  },
+  connectionMomentumDetail:{
+    marginTop:3,
+    fontSize:12,
+    lineHeight:18,
+    fontWeight:'600'
   },
   connectionJourneySuggestion:{
     marginTop:15,

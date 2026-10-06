@@ -4,9 +4,11 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   RefreshControl,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -395,10 +397,42 @@ export default function Chat(){
                   detail:'Both of you are contributing to the conversation.'
                 };
 
+    const nextStep=
+      realMessages.length===0
+        ?{
+            title:'Start the conversation',
+            detail:'Atlas can help you find a natural way to begin.',
+            action:'starters' as const
+          }
+        :myMessages>0&&theirMessages===0
+          ?{
+              title:'Give them space',
+              detail:"You've already made the first move. There's nothing you need to send right now.",
+              action:'none' as const
+            }
+          :myMessages===0&&theirMessages>0
+            ?{
+                title:'Reply naturally',
+                detail:`${data?.other.firstName?.trim()||'Your connection'} has opened the conversation. Atlas can help you shape a reply in your own voice.`,
+                action:'reply' as const
+              }
+            :sustained
+              ?{
+                  title:'Go a little deeper',
+                  detail:'You have an active two-way conversation. Atlas can suggest a thoughtful way to keep exploring it.',
+                  action:'starters' as const
+                }
+              :{
+                  title:'Explore common ground',
+                  detail:'You are both participating. Atlas can suggest something natural to explore next.',
+                  action:'starters' as const
+                };
+
     return{
       stage,
       suggestion,
       momentum,
+      nextStep,
       steps:[
         'Connected',
         'Conversation started',
@@ -494,6 +528,20 @@ export default function Chat(){
     data?.other.firstName,
     data?.other.compatibilityScore
   ]);
+
+  function openAtlasNextStep(){
+    const action=connectionJourney.nextStep.action;
+
+    if(action==='none')return;
+
+    setAtlasMode(action);
+    setCoachOpen(true);
+
+    setTimeout(
+      ()=>list.current?.scrollToEnd({animated:true}),
+      100
+    );
+  }
 
   function useAtlasSuggestion(suggestion:string){
     setValue(suggestion);
@@ -1083,6 +1131,28 @@ export default function Chat(){
               </>
             ):(
               <>
+                <Pressable
+                  onPress={()=>setJourneyOpen(false)}
+                  hitSlop={8}
+                  style={{
+                    alignSelf:'flex-end',
+                    marginTop:2,
+                    marginBottom:10,
+                    paddingVertical:4,
+                    paddingHorizontal:2
+                  }}
+                >
+                  <Text
+                    style={{
+                      color:colors.blue,
+                      fontSize:12,
+                      fontWeight:'800'
+                    }}
+                  >
+                    Hide journey ↑
+                  </Text>
+                </Pressable>
+
                 <View style={s.connectionJourneySteps}>
                   {connectionJourney.steps.map((step,index)=>{
                     const reached=index<=connectionJourney.stage;
@@ -1161,6 +1231,75 @@ export default function Chat(){
                   >
                     {connectionJourney.momentum.detail}
                   </Text>
+                </View>
+
+                <View
+                  style={[
+                    s.atlasNextStep,
+                    {
+                      borderTopColor:colors.line
+                    }
+                  ]}
+                >
+                  <Text
+                    style={[
+                      s.atlasNextStepLabel,
+                      {color:colors.blue}
+                    ]}
+                  >
+                    ATLAS NEXT STEP
+                  </Text>
+
+                  <Text
+                    style={[
+                      s.atlasNextStepTitle,
+                      {color:colors.text}
+                    ]}
+                  >
+                    {connectionJourney.nextStep.title}
+                  </Text>
+
+                  <Text
+                    style={[
+                      s.atlasNextStepDetail,
+                      {color:colors.muted}
+                    ]}
+                  >
+                    {connectionJourney.nextStep.detail}
+                  </Text>
+
+                  {connectionJourney.nextStep.action!=='none'?(
+                    <Pressable
+                      onPress={openAtlasNextStep}
+                      style={[
+                        s.atlasNextStepButton,
+                        {
+                          borderColor:colors.blue,
+                          backgroundColor:colors.blue
+                        }
+                      ]}
+                    >
+                      <Text style={s.atlasNextStepButtonText}>
+                        ✦ Ask Atlas
+                      </Text>
+                    </Pressable>
+                  ):(
+                    <View
+                      style={[
+                        s.atlasNextStepNoAction,
+                        {borderColor:colors.line}
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          s.atlasNextStepNoActionText,
+                          {color:colors.muted}
+                        ]}
+                      >
+                        No action needed
+                      </Text>
+                    </View>
+                  )}
                 </View>
 
                 <View
@@ -1417,7 +1556,7 @@ export default function Chat(){
           >
             <View style={{marginBottom:12}}>
               <Pressable
-                onPress={()=>setCoachOpen(open=>!open)}
+                onPress={()=>setCoachOpen(true)}
                 style={{
                   alignSelf:'flex-start',
                   paddingHorizontal:14,
@@ -1435,27 +1574,92 @@ export default function Chat(){
                     fontSize:13
                   }}
                 >
-                  ✦ {coachOpen?'Hide Atlas':'Ask Atlas'}
+                  ✦ Ask Atlas
                 </Text>
               </Pressable>
 
               {coachOpen?(
-                <ScrollView
-                  style={{
-                    marginTop:10,
-                    maxHeight:360,
-                    borderRadius:18,
-                    borderWidth:1,
-                    borderColor:colors.line,
-                    backgroundColor:colors.card
-                  }}
-                  contentContainerStyle={{
-                    padding:14
-                  }}
-                  nestedScrollEnabled
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator
+                <Modal
+                  visible={coachOpen}
+                  animationType="slide"
+                  presentationStyle="fullScreen"
+                  onRequestClose={()=>setCoachOpen(false)}
                 >
+                  <SafeAreaView
+                    style={{
+                      flex:1,
+                      backgroundColor:colors.bg
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection:'row',
+                        alignItems:'center',
+                        justifyContent:'space-between',
+                        paddingHorizontal:18,
+                        paddingTop:10,
+                        paddingBottom:12,
+                        borderBottomWidth:1,
+                        borderBottomColor:colors.line
+                      }}
+                    >
+                      <View>
+                        <Text
+                          style={{
+                            color:colors.blue,
+                            fontSize:11,
+                            fontWeight:'900',
+                            letterSpacing:.7
+                          }}
+                        >
+                          ✦ ATLAS
+                        </Text>
+
+                        <Text
+                          style={{
+                            color:colors.text,
+                            fontSize:20,
+                            fontWeight:'900',
+                            marginTop:2
+                          }}
+                        >
+                          Conversation Coach
+                        </Text>
+                      </View>
+
+                      <Pressable
+                        onPress={()=>setCoachOpen(false)}
+                        hitSlop={10}
+                        style={{
+                          borderWidth:1,
+                          borderColor:colors.blue,
+                          borderRadius:18,
+                          paddingHorizontal:14,
+                          paddingVertical:8
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color:colors.blue,
+                            fontSize:12,
+                            fontWeight:'900'
+                          }}
+                        >
+                          ✕ Close
+                        </Text>
+                      </Pressable>
+                    </View>
+
+                    <ScrollView
+                      style={{flex:1}}
+                      contentContainerStyle={{
+                        paddingHorizontal:18,
+                        paddingTop:16,
+                        paddingBottom:60
+                      }}
+                      keyboardShouldPersistTaps="handled"
+                      showsVerticalScrollIndicator
+                    >
                   <Text
                     style={{
                       color:colors.blue,
@@ -2188,7 +2392,9 @@ export default function Chat(){
                       {coachError}
                     </Text>
                   ):null}
-                </ScrollView>
+                    </ScrollView>
+                  </SafeAreaView>
+                </Modal>
               ):null}
             </View>
 
@@ -2353,6 +2559,56 @@ const s=StyleSheet.create({
     fontSize:12,
     lineHeight:18,
     fontWeight:'600'
+  },
+  atlasNextStep:{
+    marginTop:15,
+    paddingTop:14,
+    borderTopWidth:1
+  },
+  atlasNextStepLabel:{
+    fontSize:10,
+    lineHeight:13,
+    fontWeight:'900',
+    letterSpacing:.7
+  },
+  atlasNextStepTitle:{
+    marginTop:5,
+    fontSize:15,
+    lineHeight:20,
+    fontWeight:'900'
+  },
+  atlasNextStepDetail:{
+    marginTop:3,
+    fontSize:12,
+    lineHeight:18,
+    fontWeight:'600'
+  },
+  atlasNextStepButton:{
+    alignSelf:'flex-start',
+    marginTop:10,
+    borderWidth:1,
+    borderRadius:14,
+    paddingHorizontal:14,
+    paddingVertical:9
+  },
+  atlasNextStepButtonText:{
+    color:'#FFFFFF',
+    fontSize:12,
+    lineHeight:16,
+    fontWeight:'900'
+  },
+  atlasNextStepNoAction:{
+    alignSelf:'flex-start',
+    marginTop:10,
+    borderWidth:1,
+    borderRadius:14,
+    paddingHorizontal:12,
+    paddingVertical:8
+  },
+  atlasNextStepNoActionText:{
+    fontSize:11,
+    lineHeight:15,
+    fontWeight:'800'
   },
   connectionJourneySuggestion:{
     marginTop:15,

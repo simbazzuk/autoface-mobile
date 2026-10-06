@@ -37,6 +37,7 @@ type Candidate={
   compatibilityLevel?:string;
   strongestAlignments?:string[];
   conversationPoints?:string[];
+  introductionReasons?:string[];
 };
 
 type ReadinessStep={
@@ -586,7 +587,7 @@ export default function Discover(){
         raw.includes('AI_CONSENT_REQUIRED')
       ){
         message=
-          'Atlas can only explain this introduction when both people have opted in to AI Discovery.';
+          'Available when both people have opted in to AI Discovery.';
       }else if(raw.includes('ATLAS_AI_TEMPORARILY_UNAVAILABLE')){
         message=
           'Atlas is temporarily unavailable. Try again shortly.';
@@ -2897,16 +2898,56 @@ export default function Discover(){
                   {compatibilityCopy(c.compatibilityScore)}
                 </Body>
 
-                {c.conversationPoints?.length?(
-                  <Text style={{
-                    color:colors.muted,
-                    fontSize:13,
-                    lineHeight:18
+                {c.introductionReasons?.length?(
+                  <View style={{
+                    gap:8,
+                    marginTop:4
                   }}>
-                    Worth exploring: {c.conversationPoints
-                      .slice(0,2)
-                      .join(' · ')}
-                  </Text>
+                    <Text style={{
+                      color:colors.blue,
+                      fontSize:11,
+                      fontWeight:'900',
+                      letterSpacing:1
+                    }}>
+                      WHY THIS INTRODUCTION
+                    </Text>
+
+                    {c.introductionReasons.map((reason,index)=>(
+                      <View
+                        key={`${c.uid}-reason-${index}`}
+                        style={{
+                          flexDirection:'row',
+                          alignItems:'flex-start',
+                          gap:8
+                        }}
+                      >
+                        <Text style={{
+                          color:colors.blue,
+                          fontSize:14,
+                          fontWeight:'900'
+                        }}>
+                          ✓
+                        </Text>
+
+                        <Text style={{
+                          color:colors.text,
+                          fontSize:13,
+                          lineHeight:19,
+                          flex:1
+                        }}>
+                          {reason}
+                        </Text>
+                      </View>
+                    ))}
+
+                    <Text style={{
+                      color:colors.muted,
+                      fontSize:11,
+                      lineHeight:16
+                    }}>
+                      Based only on relationship details and preferences you've chosen to share.
+                    </Text>
+                  </View>
                 ):null}
 
                 <Text style={{
@@ -2939,8 +2980,8 @@ export default function Discover(){
                     {atlasInsightBusy===c.uid
                       ?'✦ Atlas is looking deeper...'
                       :atlasInsights[c.uid]
-                        ?'Hide why Atlas chose this introduction'
-                        :'✦ Why did Atlas choose this introduction?'}
+                        ?'Hide deeper Atlas insight'
+                        :'✦ Deeper Atlas insight'}
                   </Text>
                 </Pressable>
 

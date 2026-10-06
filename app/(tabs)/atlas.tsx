@@ -6,6 +6,7 @@ import {api} from '@/src/lib/api';
 import {auth,db} from '@/src/lib/firebase';
 import {Body,Button,Card,H2,Input,Loading,Screen} from '@/src/components/UI';
 import {useAppTheme} from '@/src/context/Theme';
+import {AtlasDailyModal} from '@/src/components/AtlasDaily';
 
 type Pace='slow'|'balanced'|'intentional';
 type Profile={familyOrientation:number;communicationDirectness:number;socialEnergy:number;careerPriority:number;routineVsAdventure:number;relocationFlexibility:number;sharedInterestsImportance:number;independencePreference:number;relationshipPace:Pace;weekendPreferences:string[];relationshipPriorities:string[];nonNegotiablePreferences:string[];relationshipContext:string;consentForCompatibility:boolean;consentForAiDiscovery:boolean;consentForAiReflection:boolean};
@@ -15,6 +16,7 @@ const priorities=['Family','Communication','Career','Faith & values','Lifestyle'
 const nonNegotiables=['Trust','Respect','Honesty','Family values','Shared goals','Healthy communication'];
 
 export default function Atlas(){
+  const [atlasDailyOpen,setAtlasDailyOpen]=useState(false);
  const {colors}=useAppTheme();const [form,setForm]=useState<Profile>(initial);const [loading,setLoading]=useState(true);const [saving,setSaving]=useState(false);const [saved,setSaved]=useState(false);const [message,setMessage]=useState('');const [reflection,setReflection]=useState('');const [busy,setBusy]=useState(false);
  const load=useCallback(async()=>{const user=auth?.currentUser;if(!user||!db){setLoading(false);return}try{setLoading(true);setMessage('');const snap=await getDoc(doc(db,'relationshipProfiles',user.uid));if(snap.exists()){const d=snap.data() as Partial<Profile>;setForm({...initial,...d,weekendPreferences:Array.isArray(d.weekendPreferences)?d.weekendPreferences:[],relationshipPriorities:Array.isArray(d.relationshipPriorities)?d.relationshipPriorities:[],nonNegotiablePreferences:Array.isArray(d.nonNegotiablePreferences)?d.nonNegotiablePreferences:[]});setSaved(true)}}catch(e){setMessage(friendly(e))}finally{setLoading(false)}},[]);
  useFocusEffect(useCallback(()=>{void load()},[load]));
@@ -24,7 +26,12 @@ export default function Atlas(){
  async function save(){const user=auth?.currentUser;if(!user||!db||saving)return;if(!form.weekendPreferences.length||!form.relationshipPriorities.length||!form.nonNegotiablePreferences.length){setMessage('Choose at least one option in each relationship section.');return}if(!form.consentForCompatibility){setMessage('Please allow AutoFace to use these answers for compatibility recommendations.');return}try{setSaving(true);setMessage('');await setDoc(doc(db,'relationshipProfiles',user.uid),{uid:user.uid,...form,idealWeekend:form.weekendPreferences.join(', '),whatMattersMost:form.relationshipPriorities.join(', '),nonNegotiables:form.nonNegotiablePreferences.join(', '),relationshipContext:form.relationshipContext.trim(),updatedAt:serverTimestamp()},{merge:true});setSaved(true);setMessage(form.consentForAiDiscovery?'Atlas profile saved. Compatibility and optional AI Discovery are enabled.':'Atlas profile saved. Compatibility is enabled; optional AI Discovery remains off.')}catch(e){setMessage(friendly(e))}finally{setSaving(false)}}
  async function reflect(){if(!saved){setMessage('Save your Atlas relationship profile first.');return}if(!form.consentForAiReflection){setMessage('Enable optional Atlas AI Reflection first.');return}try{setBusy(true);setMessage('');const x:any=await api('/api/atlas-ai',{method:'POST',body:JSON.stringify({mode:'profile',consent:true})});setReflection((x.insight||x.reflection||x.message||'').trim()||'Atlas could not create a reflection right now.')}catch(e){setMessage(friendly(e))}finally{setBusy(false)}}
  if(loading)return <Screen eyebrow="RELATIONSHIP INTELLIGENCE" title="Atlas"><Loading/></Screen>;
- return <Screen eyebrow="ATLAS" title="Relationship intelligence"><ScrollView contentContainerStyle={{gap:12,paddingBottom:110}} keyboardShouldPersistTaps="handled">
+ return <Screen eyebrow="ATLAS" title="Relationship intelligence">
+  <AtlasDailyModal
+    visible={atlasDailyOpen}
+    onClose={()=>setAtlasDailyOpen(false)}
+  />
+  <ScrollView contentContainerStyle={{gap:12,paddingBottom:110}} keyboardShouldPersistTaps="handled">
   <View style={{
    backgroundColor:colors.blue+'10',
    borderWidth:1,
@@ -149,10 +156,71 @@ export default function Atlas(){
     />
   </View>
 
+  <Pressable
+    onPress={()=>setAtlasDailyOpen(true)}
+    style={({pressed})=>({
+      backgroundColor:pressed
+        ?colors.pink+'12'
+        :colors.card,
+      borderWidth:1,
+      borderColor:colors.pink,
+      borderRadius:20,
+      padding:16,
+      flexDirection:'row',
+      alignItems:'center',
+      gap:14
+    })}
+  >
+    <View style={{
+      width:44,
+      height:44,
+      borderRadius:22,
+      backgroundColor:colors.pink,
+      alignItems:'center',
+      justifyContent:'center'
+    }}>
+      <Text style={{
+        color:'#FFFFFF',
+        fontSize:20,
+        fontWeight:'900'
+      }}>
+        ✦
+      </Text>
+    </View>
+
+    <View style={{flex:1,minWidth:0}}>
+      <Text style={{
+        color:colors.pink,
+        fontSize:10,
+        fontWeight:'900',
+        letterSpacing:1.1,
+        marginBottom:4
+      }}>
+        TODAY'S THOUGHT
+      </Text>
+
+      <Text style={{
+        color:colors.ink,
+        fontSize:15,
+        fontWeight:'800'
+      }}>
+        A little inspiration from Atlas
+      </Text>
+    </View>
+
+    <Text style={{
+      color:colors.pink,
+      fontSize:14,
+      fontWeight:'900'
+    }}>
+      Open ›
+    </Text>
+  </Pressable>
+
   <View style={{
     backgroundColor:colors.card,
     borderWidth:1,
-    borderColor:colors.line,
+    borderColor:colors.blue,
     borderRadius:20,
     padding:16,
     gap:10

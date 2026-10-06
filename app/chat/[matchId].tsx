@@ -326,6 +326,60 @@ export default function Chat(){
 
   const messages=data?.messages??[];
 
+  const connectionJourney=useMemo(()=>{
+    const realMessages=messages.filter(
+      message=>!message.pending&&!message.failed
+    );
+
+    const myUid=user?.uid??'';
+
+    const myMessages=realMessages.filter(
+      message=>message.senderUid===myUid
+    ).length;
+
+    const theirMessages=realMessages.filter(
+      message=>message.senderUid!==myUid
+    ).length;
+
+    const bothParticipated=myMessages>0&&theirMessages>0;
+
+    const sustained=
+      realMessages.length>=6 &&
+      myMessages>=2 &&
+      theirMessages>=2;
+
+    const stage=
+      sustained
+        ?3
+        :bothParticipated
+          ?2
+          :realMessages.length>0
+            ?1
+            :0;
+
+    const suggestion=
+      stage===0
+        ?`Start when you're ready. Atlas can help you find an easy opening with ${data?.other.firstName?.trim()||'your connection'}.`
+        :stage===1
+          ?myMessages>0&&theirMessages===0
+            ?'You have opened the conversation. Give them space to reply when they are ready.'
+            :'The conversation has started. Reply naturally when you are ready.'
+          :stage===2
+            ?'You are both taking part. Explore something you genuinely enjoy talking about.'
+            :'You have a longer two-way conversation going. Atlas can help you explore it without forcing the pace.';
+
+    return{
+      stage,
+      suggestion,
+      steps:[
+        'Connected',
+        'Conversation started',
+        'Getting to know each other',
+        'Building the conversation'
+      ]
+    };
+  },[messages,user?.uid,data?.other.firstName]);
+
   useEffect(()=>{
     let active=true;
 
@@ -906,6 +960,120 @@ export default function Chat(){
                 Retry
               </Text>
             </Pressable>
+          </View>
+        ):null}
+
+        {data?(
+          <View
+            style={[
+              s.connectionJourneyCard,
+              {
+                borderColor:colors.blue,
+                backgroundColor:colors.card
+              }
+            ]}
+          >
+            <View style={s.connectionJourneyHeader}>
+              <View>
+                <Text
+                  style={[
+                    s.connectionJourneyEyebrow,
+                    {color:colors.blue}
+                  ]}
+                >
+                  YOUR CONNECTION
+                </Text>
+
+                <Text
+                  style={[
+                    s.connectionJourneyTitle,
+                    {color:colors.text}
+                  ]}
+                >
+                  Conversation journey
+                </Text>
+              </View>
+
+              <Text
+                style={[
+                  s.connectionJourneyAtlas,
+                  {color:colors.blue}
+                ]}
+              >
+                ATLAS
+              </Text>
+            </View>
+
+            <View style={s.connectionJourneySteps}>
+              {connectionJourney.steps.map((step,index)=>{
+                const reached=index<=connectionJourney.stage;
+
+                return(
+                  <View
+                    key={step}
+                    style={s.connectionJourneyStep}
+                  >
+                    <View
+                      style={[
+                        s.connectionJourneyDot,
+                        {
+                          borderColor:reached
+                            ?colors.blue
+                            :colors.line,
+                          backgroundColor:reached
+                            ?colors.blue
+                            :'transparent'
+                        }
+                      ]}
+                    >
+                      {reached?(
+                        <Text style={s.connectionJourneyCheck}>
+                          ✓
+                        </Text>
+                      ):null}
+                    </View>
+
+                    <Text
+                      style={[
+                        s.connectionJourneyStepText,
+                        {
+                          color:reached
+                            ?colors.text
+                            :colors.muted
+                        }
+                      ]}
+                    >
+                      {step}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+
+            <View
+              style={[
+                s.connectionJourneySuggestion,
+                {backgroundColor:colors.photo}
+              ]}
+            >
+              <Text
+                style={[
+                  s.connectionJourneySuggestionLabel,
+                  {color:colors.blue}
+                ]}
+              >
+                ✦ ATLAS SUGGESTION
+              </Text>
+
+              <Text
+                style={[
+                  s.connectionJourneySuggestionText,
+                  {color:colors.text}
+                ]}
+              >
+                {connectionJourney.suggestion}
+              </Text>
+            </View>
           </View>
         ):null}
 
@@ -1951,6 +2119,83 @@ export default function Chat(){
 }
 
 const s=StyleSheet.create({
+  connectionJourneyCard:{
+    borderWidth:1,
+    borderRadius:18,
+    padding:16,
+    marginTop:12,
+    marginBottom:12
+  },
+  connectionJourneyHeader:{
+    flexDirection:'row',
+    alignItems:'flex-start',
+    justifyContent:'space-between',
+    gap:12
+  },
+  connectionJourneyEyebrow:{
+    fontSize:11,
+    lineHeight:14,
+    fontWeight:'900',
+    letterSpacing:.8
+  },
+  connectionJourneyTitle:{
+    marginTop:3,
+    fontSize:18,
+    lineHeight:23,
+    fontWeight:'900'
+  },
+  connectionJourneyAtlas:{
+    fontSize:11,
+    lineHeight:14,
+    fontWeight:'900',
+    letterSpacing:.8
+  },
+  connectionJourneySteps:{
+    marginTop:14,
+    gap:9
+  },
+  connectionJourneyStep:{
+    flexDirection:'row',
+    alignItems:'center',
+    gap:9
+  },
+  connectionJourneyDot:{
+    width:20,
+    height:20,
+    borderRadius:10,
+    borderWidth:1.5,
+    alignItems:'center',
+    justifyContent:'center'
+  },
+  connectionJourneyCheck:{
+    color:'#FFFFFF',
+    fontSize:11,
+    lineHeight:14,
+    fontWeight:'900'
+  },
+  connectionJourneyStepText:{
+    flex:1,
+    fontSize:13,
+    lineHeight:18,
+    fontWeight:'700'
+  },
+  connectionJourneySuggestion:{
+    marginTop:15,
+    borderRadius:14,
+    padding:12
+  },
+  connectionJourneySuggestionLabel:{
+    fontSize:10,
+    lineHeight:13,
+    fontWeight:'900',
+    letterSpacing:.7
+  },
+  connectionJourneySuggestionText:{
+    marginTop:5,
+    fontSize:13,
+    lineHeight:19,
+    fontWeight:'600'
+  },
   flex:{
     flex:1,
     gap:8

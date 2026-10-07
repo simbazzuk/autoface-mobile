@@ -1,5 +1,6 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {
+  Alert,
   AppState,
   FlatList,
   Image,
@@ -12,6 +13,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View
 } from 'react-native';
 import {router,useFocusEffect,useLocalSearchParams} from 'expo-router';
@@ -141,6 +143,23 @@ const QUICK_REPLIES=[
   'What made you smile today?'
 ];
 
+type ReportReason=
+  |'fake_identity'
+  |'harassment'
+  |'financial_request'
+  |'inappropriate_content'
+  |'spam'
+  |'other';
+
+const REPORT_REASONS:{value:ReportReason;label:string}[]=[
+  {value:'fake_identity',label:'Fake profile or identity'},
+  {value:'harassment',label:'Harassment'},
+  {value:'financial_request',label:'Asking for money'},
+  {value:'inappropriate_content',label:'Inappropriate content'},
+  {value:'spam',label:'Spam'},
+  {value:'other',label:'Other'}
+];
+
 function dayLabel(value?:string|null){
   if(!value)return '';
 
@@ -228,6 +247,14 @@ export default function Chat(){
   const [refreshing,setRefreshing]=useState(false);
   const [sending,setSending]=useState(false);
   const [photoAuthToken,setPhotoAuthToken]=useState<string|null>(null);
+
+  // AutoFace 0.1.20 - connection safety
+  const [connectionOptionsOpen,setConnectionOptionsOpen]=useState(false);
+  const [reportOpen,setReportOpen]=useState(false);
+  const [reportReason,setReportReason]=useState<ReportReason|null>(null);
+  const [reportDetails,setReportDetails]=useState('');
+  const [blockAfterReport,setBlockAfterReport]=useState(true);
+  const [safetyBusy,setSafetyBusy]=useState(false);
 
   // AutoFace 0.1.20 - Atlas Conversation Coach
   const [coachOpen,setCoachOpen]=useState(false);
@@ -853,6 +880,108 @@ export default function Chat(){
     }
   }
 
+  async function submitReport(){
+    if(!matchId||!reportReason||safetyBusy)return;
+
+    try{
+      setSafetyBusy(true);
+
+      await api('/api/match-actions',{
+        method:'POST',
+        body:JSON.stringify({
+          matchId,
+          action:'report',
+          reason:reportReason,
+          details:reportDetails.trim(),
+          blockAfterReport
+        })
+      });
+
+      setReportOpen(false);
+      setConnectionOptionsOpen(false);
+      setReportReason(null);
+      setReportDetails('');
+
+      if(blockAfterReport){
+        Alert.alert(
+          'Report received',
+          'Thank you for telling us. This person has also been blocked.',
+          [
+            {
+              text:'OK',
+              onPress:()=>router.back()
+            }
+          ]
+        );
+      }else{
+        Alert.alert(
+          'Report received',
+          'Thank you for telling us. Your report has been submitted.'
+        );
+      }
+    }catch(error){
+      Alert.alert(
+        'Unable to submit report',
+        error instanceof Error
+          ?error.message
+          :'Please try again.'
+      );
+    }finally{
+      setSafetyBusy(false);
+    }
+  }
+
+  function confirmBlock(){
+    if(!matchId||safetyBusy)return;
+
+    Alert.alert(
+      `Block ${data?.other?.firstName||'this user'}?`,
+      `They won't be able to contact you and this connection will end.`,
+      [
+        {text:'Cancel',style:'cancel'},
+        {
+          text:'Block',
+          style:'destructive',
+          onPress:async()=>{
+            try{
+              setSafetyBusy(true);
+
+              await api('/api/match-actions',{
+                method:'POST',
+                body:JSON.stringify({
+                  matchId,
+                  action:'block'
+                })
+              });
+
+              setConnectionOptionsOpen(false);
+
+              Alert.alert(
+                'User blocked',
+                `${data?.other?.firstName||'This user'} has been blocked.`,
+                [
+                  {
+                    text:'OK',
+                    onPress:()=>router.back()
+                  }
+                ]
+              );
+            }catch(error){
+              Alert.alert(
+                'Unable to block user',
+                error instanceof Error
+                  ?error.message
+                  :'Please try again.'
+              );
+            }finally{
+              setSafetyBusy(false);
+            }
+          }
+        }
+      ]
+    );
+  }
+
   if(loading){
     return(
       <Screen
@@ -985,10 +1114,250 @@ export default function Chat(){
                   </Text>
                 ):null}
               </View>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Connection options"
+                hitSlop={10}
+                onPress={()=>setConnectionOptionsOpen(true)}
+                style={s.connectionMenuButton}
+              >
+                <Text
+                  style={[
+                    s.connectionMenuText,
+                    {color:colors.blue}
+                  ]}
+                >
+                  🛡  Safety
+                </Text>
+              </Pressable>
             </View>
 
           </View>
         ):null}
+
+        <Modal
+          visible={connectionOptionsOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={()=>setConnectionOptionsOpen(false)}
+        >
+          <Pressable
+            style={s.safetyBackdrop}
+            onPress={()=>setConnectionOptionsOpen(false)}
+          >
+            <Pressable
+              style={[
+                s.safetyCard,
+                {
+                  backgroundColor:colors.card,
+                  borderColor:colors.line
+                }
+              ]}
+              onPress={()=>{}}
+            >
+              <Text style={[s.safetyTitle,{color:colors.text}]}>
+                Connection options
+              </Text>
+
+              <Text style={[s.safetyBody,{color:colors.muted}]}>
+                Manage your connection with {personName}.
+              </Text>
+
+              <Pressable
+                style={[s.safetyAction,{borderColor:colors.line}]}
+                onPress={()=>{
+                  setConnectionOptionsOpen(false);
+                  setReportOpen(true);
+                }}
+              >
+                <Text style={[s.safetyActionTitle,{color:colors.text}]}>
+                  Report user
+                </Text>
+                <Text style={[s.safetyActionBody,{color:colors.muted}]}>
+                  Tell us about behaviour that concerns you
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[s.safetyAction,{borderColor:colors.line}]}
+                disabled={safetyBusy}
+                onPress={confirmBlock}
+              >
+                <Text style={[s.safetyActionTitle,{color:colors.rose}]}>
+                  Block user
+                </Text>
+                <Text style={[s.safetyActionBody,{color:colors.muted}]}>
+                  End this connection and prevent future contact
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={()=>setConnectionOptionsOpen(false)}
+                style={s.safetyCancel}
+              >
+                <Text style={{color:colors.blue,fontWeight:'800'}}>
+                  Cancel
+                </Text>
+              </Pressable>
+            </Pressable>
+          </Pressable>
+        </Modal>
+
+        <Modal
+          visible={reportOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={()=>setReportOpen(false)}
+        >
+          <View style={s.safetyBackdrop}>
+            <View
+              style={[
+                s.reportCard,
+                {
+                  backgroundColor:colors.card,
+                  borderColor:colors.line
+                }
+              ]}
+            >
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+              >
+                <Text style={[s.safetyTitle,{color:colors.text}]}>
+                  Report {personName}
+                </Text>
+
+                <Text style={[s.safetyBody,{color:colors.muted}]}>
+                  Your report is private. {personName} won't be told
+                  that you submitted it.
+                </Text>
+
+                <Text style={[s.reportLabel,{color:colors.text}]}>
+                  What's the reason?
+                </Text>
+
+                <View style={s.reportReasons}>
+                  {REPORT_REASONS.map(item=>{
+                    const selected=reportReason===item.value;
+
+                    return(
+                      <Pressable
+                        key={item.value}
+                        onPress={()=>setReportReason(item.value)}
+                        style={[
+                          s.reportReason,
+                          {
+                            borderColor:selected
+                              ?colors.blue
+                              :colors.line,
+                            backgroundColor:selected
+                              ?`${colors.blue}18`
+                              :colors.bg
+                          }
+                        ]}
+                      >
+                        <Text
+                          style={{
+                            color:selected
+                              ?colors.blue
+                              :colors.text,
+                            fontWeight:'700'
+                          }}
+                        >
+                          {item.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <Text style={[s.reportLabel,{color:colors.text}]}>
+                  Additional details
+                </Text>
+
+                <TextInput
+                  value={reportDetails}
+                  onChangeText={text=>setReportDetails(text.slice(0,1000))}
+                  placeholder="Optional — tell us what happened"
+                  placeholderTextColor={colors.muted}
+                  multiline
+                  maxLength={1000}
+                  style={[
+                    s.reportInput,
+                    {
+                      color:colors.text,
+                      borderColor:colors.line,
+                      backgroundColor:colors.bg
+                    }
+                  ]}
+                />
+
+                <Pressable
+                  onPress={()=>setBlockAfterReport(v=>!v)}
+                  style={[
+                    s.blockChoice,
+                    {borderColor:colors.line}
+                  ]}
+                >
+                  <View
+                    style={[
+                      s.checkbox,
+                      {
+                        borderColor:blockAfterReport
+                          ?colors.blue
+                          :colors.line,
+                        backgroundColor:blockAfterReport
+                          ?colors.blue
+                          :'transparent'
+                      }
+                    ]}
+                  >
+                    {blockAfterReport?(
+                      <Text style={s.checkboxTick}>✓</Text>
+                    ):null}
+                  </View>
+
+                  <View style={{flex:1}}>
+                    <Text
+                      style={{
+                        color:colors.text,
+                        fontWeight:'800'
+                      }}
+                    >
+                      Also block this person
+                    </Text>
+                    <Text
+                      style={[
+                        s.safetyActionBody,
+                        {color:colors.muted}
+                      ]}
+                    >
+                      They won't be able to contact you and this
+                      connection will end.
+                    </Text>
+                  </View>
+                </Pressable>
+
+                <Button
+                  title={safetyBusy?'Submitting…':'Submit report'}
+                  disabled={!reportReason||safetyBusy}
+                  onPress={()=>void submitReport()}
+                />
+
+                <Pressable
+                  disabled={safetyBusy}
+                  onPress={()=>setReportOpen(false)}
+                  style={s.safetyCancel}
+                >
+                  <Text style={{color:colors.blue,fontWeight:'800'}}>
+                    Cancel
+                  </Text>
+                </Pressable>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
 
         {err?(
           <View
@@ -2799,6 +3168,110 @@ const s=StyleSheet.create({
     flexDirection:'row',
     alignItems:'center',
     gap:12
+  },
+  connectionMenuButton:{
+    alignSelf:'flex-start',
+    paddingHorizontal:6,
+    paddingVertical:6,
+    marginLeft:2
+  },
+  connectionMenuText:{
+    fontSize:18,
+    fontWeight:'900',
+    letterSpacing:1
+  },
+  safetyBackdrop:{
+    flex:1,
+    backgroundColor:'rgba(0,0,0,0.55)',
+    justifyContent:'center',
+    padding:20
+  },
+  safetyCard:{
+    borderWidth:1,
+    borderRadius:22,
+    padding:18,
+    gap:12
+  },
+  reportCard:{
+    borderWidth:1,
+    borderRadius:22,
+    padding:18,
+    maxHeight:'86%'
+  },
+  safetyTitle:{
+    fontSize:21,
+    fontWeight:'900'
+  },
+  safetyBody:{
+    fontSize:13,
+    lineHeight:19,
+    marginTop:4,
+    marginBottom:8
+  },
+  safetyAction:{
+    borderWidth:1,
+    borderRadius:15,
+    padding:14,
+    gap:3
+  },
+  safetyActionTitle:{
+    fontSize:16,
+    fontWeight:'800'
+  },
+  safetyActionBody:{
+    fontSize:12,
+    lineHeight:17
+  },
+  safetyCancel:{
+    alignItems:'center',
+    paddingVertical:10,
+    marginTop:2
+  },
+  reportLabel:{
+    fontSize:13,
+    fontWeight:'800',
+    marginTop:14,
+    marginBottom:8
+  },
+  reportReasons:{
+    gap:8
+  },
+  reportReason:{
+    borderWidth:1,
+    borderRadius:13,
+    paddingVertical:11,
+    paddingHorizontal:12
+  },
+  reportInput:{
+    minHeight:96,
+    borderWidth:1,
+    borderRadius:14,
+    padding:12,
+    textAlignVertical:'top',
+    fontSize:15,
+    lineHeight:20
+  },
+  blockChoice:{
+    flexDirection:'row',
+    alignItems:'flex-start',
+    gap:10,
+    borderWidth:1,
+    borderRadius:14,
+    padding:12,
+    marginVertical:14
+  },
+  checkbox:{
+    width:22,
+    height:22,
+    borderRadius:6,
+    borderWidth:1,
+    alignItems:'center',
+    justifyContent:'center'
+  },
+  checkboxTick:{
+    color:'#fff',
+    fontSize:14,
+    fontWeight:'900'
   },
   avatar:{
     width:58,

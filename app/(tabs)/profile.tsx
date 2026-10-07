@@ -1128,6 +1128,48 @@ export default function Profile(){
             and what other members can see.
           </Body>
 
+          <Pressable
+            onPress={()=>router.push('/blocked-users')}
+            style={{
+              flexDirection:'row',
+              alignItems:'center',
+              justifyContent:'space-between',
+              paddingVertical:12,
+              marginTop:4
+            }}
+          >
+            <View style={{flex:1}}>
+              <Text
+                style={{
+                  color:colors.text,
+                  fontWeight:'800',
+                  fontSize:16
+                }}
+              >
+                Blocked users
+              </Text>
+
+              <Text
+                style={{
+                  color:colors.muted,
+                  marginTop:3
+                }}
+              >
+                View and manage people you've blocked
+              </Text>
+            </View>
+
+            <Text
+              style={{
+                color:colors.blue,
+                fontSize:26,
+                marginLeft:12
+              }}
+            >
+              ›
+            </Text>
+          </Pressable>
+
           <Toggle
             label="Appear in Discovery"
             value={account?.privacy?.discoveryEnabled??false}

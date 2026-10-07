@@ -9,14 +9,17 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "chat.mip.autoface",
-      "buildNumber": "66",
+      "buildNumber": "67",
       "infoPlist": {
         "NSCameraUsageDescription": "AutoFace uses the camera for profile and authenticity verification.",
         "NSPhotoLibraryUsageDescription": "AutoFace uses your photo library so you can choose a profile photo.",
         "NSSpeechRecognitionUsageDescription": "AutoFace may use speech recognition to support voice-enabled features.",
         "ITSAppUsesNonExemptEncryption": false,
         "ExpoModulesProviderModuleName": "AutoFace"
-      }
+      },
+      "associatedDomains": [
+        "applinks:mip.chat"
+      ]
     },
     "plugins": [
       "expo-router",

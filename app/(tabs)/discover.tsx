@@ -2465,7 +2465,9 @@ export default function Discover(){
         {showHowAutoFace?(
           <View
             style={{
-              backgroundColor:colors.pink,
+              backgroundColor:colors.card,
+              borderWidth:2,
+              borderColor:colors.pink,
               borderRadius:22,
               padding:18,
               marginBottom:18,
@@ -2483,7 +2485,7 @@ export default function Discover(){
                   width:42,
                   height:42,
                   borderRadius:21,
-                  backgroundColor:'rgba(255,255,255,0.18)',
+                  backgroundColor:`${colors.pink}18`,
                   alignItems:'center',
                   justifyContent:'center',
                   marginRight:13
@@ -2492,14 +2494,14 @@ export default function Discover(){
                 <Ionicons
                   name="heart"
                   size={21}
-                  color="#FFFFFF"
+                  color={colors.pink}
                 />
               </View>
 
               <View style={{flex:1}}>
                 <Text
                   style={{
-                    color:'#FFFFFF',
+                    color:colors.pink,
                     fontSize:11,
                     fontWeight:'900',
                     letterSpacing:1.1,
@@ -2511,7 +2513,7 @@ export default function Discover(){
 
                 <Text
                   style={{
-                    color:'#FFFFFF',
+                    color:colors.ink,
                     fontSize:18,
                     lineHeight:23,
                     fontWeight:'900',
@@ -2523,7 +2525,7 @@ export default function Discover(){
 
                 <Text
                   style={{
-                    color:'#FFFFFF',
+                    color:colors.muted,
                     fontSize:13,
                     lineHeight:19,
                     marginTop:7,
@@ -2542,7 +2544,7 @@ export default function Discover(){
                 marginTop:16,
                 paddingTop:14,
                 borderTopWidth:1,
-                borderTopColor:'rgba(255,255,255,0.28)'
+                borderTopColor:colors.line
               }}
             >
               <Pressable
@@ -2555,7 +2557,7 @@ export default function Discover(){
               >
                 <Text
                   style={{
-                    color:'#FFFFFF',
+                    color:colors.pink,
                     fontSize:13,
                     fontWeight:'900'
                   }}
@@ -2576,7 +2578,7 @@ export default function Discover(){
               >
                 <Text
                   style={{
-                    color:'#FFFFFF',
+                    color:colors.muted,
                     fontSize:12,
                     fontWeight:'800',
                     opacity:0.88

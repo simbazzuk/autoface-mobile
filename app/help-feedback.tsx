@@ -239,7 +239,9 @@ export default function HelpFeedback(){
           accessibilityState={{expanded:aboutOpen}}
           onPress={()=>setAboutOpen(v=>!v)}
           style={{
-            backgroundColor:colors.pink,
+            backgroundColor:colors.card,
+          borderWidth:2,
+          borderColor:colors.pink,
             borderRadius:24,
             padding:20,
             marginTop:8,
@@ -257,7 +259,7 @@ export default function HelpFeedback(){
                 width:46,
                 height:46,
                 borderRadius:23,
-                backgroundColor:'rgba(255,255,255,0.18)',
+                backgroundColor:`${colors.pink}18`,
                 alignItems:'center',
                 justifyContent:'center',
                 marginRight:14
@@ -266,14 +268,14 @@ export default function HelpFeedback(){
               <Ionicons
                 name="heart"
                 size={23}
-                color="#FFFFFF"
+                color={colors.pink}
               />
             </View>
 
             <View style={{flex:1}}>
               <Text
                 style={{
-                  color:'#FFFFFF',
+                  color:colors.pink,
                   fontSize:11,
                   fontWeight:'900',
                   letterSpacing:1.2,
@@ -285,7 +287,7 @@ export default function HelpFeedback(){
 
               <Text
                 style={{
-                  color:'#FFFFFF',
+                  color:colors.ink,
                   fontSize:21,
                   lineHeight:26,
                   fontWeight:'900',
@@ -298,7 +300,7 @@ export default function HelpFeedback(){
               {!aboutOpen?(
                 <Text
                   style={{
-                    color:'#FFFFFF',
+                    color:colors.muted,
                     fontSize:13,
                     lineHeight:19,
                     marginTop:7,
@@ -313,7 +315,7 @@ export default function HelpFeedback(){
             <Ionicons
               name={aboutOpen?'chevron-up':'chevron-down'}
               size={20}
-              color="#FFFFFF"
+              color={colors.pink}
               style={{marginLeft:8,marginTop:3}}
             />
           </View>
@@ -324,12 +326,12 @@ export default function HelpFeedback(){
                 marginTop:18,
                 paddingTop:17,
                 borderTopWidth:1,
-                borderTopColor:'rgba(255,255,255,0.28)'
+                borderTopColor:colors.line
               }}
             >
               <Text
                 style={{
-                  color:'#FFFFFF',
+                  color:colors.ink,
                   fontSize:14,
                   lineHeight:21,
                   fontWeight:'600'
@@ -344,14 +346,14 @@ export default function HelpFeedback(){
               <View
                 style={{
                   marginTop:16,
-                  backgroundColor:'rgba(255,255,255,0.14)',
+                  backgroundColor:`${colors.pink}10`,
                   borderRadius:16,
                   padding:14
                 }}
               >
                 <Text
                   style={{
-                    color:'#FFFFFF',
+                    color:colors.ink,
                     fontSize:13,
                     lineHeight:20,
                     fontWeight:'900',
@@ -406,14 +408,14 @@ export default function HelpFeedback(){
                     <Ionicons
                       name={item.icon as any}
                       size={17}
-                      color="#FFFFFF"
+                      color={colors.pink}
                     />
                   </View>
 
                   <View style={{flex:1}}>
                     <Text
                       style={{
-                        color:'#FFFFFF',
+                        color:colors.ink,
                         fontSize:14,
                         fontWeight:'900'
                       }}
@@ -423,7 +425,7 @@ export default function HelpFeedback(){
 
                     <Text
                       style={{
-                        color:'#FFFFFF',
+                        color:colors.ink,
                         fontSize:12,
                         lineHeight:18,
                         marginTop:3,
@@ -438,7 +440,7 @@ export default function HelpFeedback(){
 
               <Text
                 style={{
-                  color:'#FFFFFF',
+                  color:colors.ink,
                   fontSize:12,
                   lineHeight:18,
                   marginTop:18,
@@ -460,7 +462,7 @@ export default function HelpFeedback(){
           >
             <Text
               style={{
-                color:'#FFFFFF',
+                color:colors.ink,
                 fontSize:13,
                 fontWeight:'900'
               }}
@@ -471,7 +473,7 @@ export default function HelpFeedback(){
             <Ionicons
               name={aboutOpen?'chevron-up':'chevron-forward'}
               size={16}
-              color="#FFFFFF"
+              color={colors.pink}
               style={{marginLeft:3}}
             />
           </View>

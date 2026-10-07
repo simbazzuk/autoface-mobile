@@ -11,6 +11,7 @@ import {
   View
 } from 'react-native';
 import {router,useFocusEffect} from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import {api,profilePhoto} from '@/src/lib/api';
 import {Body,Button,Card,H2,Screen} from '@/src/components/UI';
 import {useAppTheme} from '@/src/context/Theme';
@@ -265,6 +266,10 @@ export default function Discover(){
     useState<{label:string;count:number}|null>(null);
 
   const [whyOpen,setWhyOpen]=useState(false);
+
+  // Lightweight, per-user explanation of the AutoFace Discovery journey.
+  const [howAutoFaceOpen,setHowAutoFaceOpen]=useState(false);
+  const [showHowAutoFace,setShowHowAutoFace]=useState(false);
   const [expanded,setExpanded]=useState<Record<string,boolean>>({});
   const [failedPhotos,setFailedPhotos]=useState<Record<string,boolean>>({});
   const [photoAuthToken,setPhotoAuthToken]=useState<string|null>(null);
@@ -311,6 +316,54 @@ export default function Discover(){
 
     return ()=>{active=false;};
   },[]);
+
+  useEffect(()=>{
+    let active=true;
+
+    async function loadHowAutoFaceState(){
+      try{
+        const uid=auth?.currentUser?.uid;
+
+        if(!uid){
+          if(active)setShowHowAutoFace(false);
+          return;
+        }
+
+        const dismissed=await AsyncStorage.getItem(
+          `howAutoFaceWorksDismissed:${uid}`
+        );
+
+        if(active){
+          setShowHowAutoFace(dismissed!=='true');
+        }
+      }catch{
+        // Product guidance must never prevent Discovery loading.
+        if(active)setShowHowAutoFace(true);
+      }
+    }
+
+    void loadHowAutoFaceState();
+
+    return ()=>{active=false;};
+  },[]);
+
+  async function dismissHowAutoFace(){
+    const uid=auth?.currentUser?.uid;
+
+    setHowAutoFaceOpen(false);
+    setShowHowAutoFace(false);
+
+    if(!uid)return;
+
+    try{
+      await AsyncStorage.setItem(
+        `howAutoFaceWorksDismissed:${uid}`,
+        'true'
+      );
+    }catch{
+      // Dismissal persistence must never block Discovery.
+    }
+  }
 
   const load=useCallback(async()=>{
     try{
@@ -961,6 +1014,248 @@ export default function Discover(){
         visible={atlasDailyOpen}
         onClose={()=>void closeAtlasDaily()}
       />
+
+      <Modal
+        visible={howAutoFaceOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={()=>setHowAutoFaceOpen(false)}
+      >
+        <View
+          style={{
+            flex:1,
+            backgroundColor:'rgba(0,0,0,0.58)',
+            justifyContent:'flex-end'
+          }}
+        >
+          <View
+            style={{
+              backgroundColor:colors.card,
+              borderTopLeftRadius:28,
+              borderTopRightRadius:28,
+              maxHeight:'88%'
+            }}
+          >
+            <ScrollView
+              contentContainerStyle={{
+                padding:22,
+                paddingBottom:38
+              }}
+            >
+              <View
+                style={{
+                  flexDirection:'row',
+                  alignItems:'flex-start',
+                  marginBottom:8
+                }}
+              >
+                <View style={{flex:1}}>
+                  <Text
+                    style={{
+                      color:colors.blue,
+                      fontSize:11,
+                      fontWeight:'900',
+                      letterSpacing:1.1
+                    }}
+                  >
+                    HOW AUTOFACE WORKS
+                  </Text>
+
+                  <Text
+                    style={{
+                      color:colors.ink,
+                      fontSize:24,
+                      lineHeight:29,
+                      fontWeight:'900',
+                      marginTop:5
+                    }}
+                  >
+                    Considered connections, not endless swiping
+                  </Text>
+                </View>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Close"
+                  hitSlop={10}
+                  onPress={()=>setHowAutoFaceOpen(false)}
+                  style={{padding:6,marginLeft:8}}
+                >
+                  <Text
+                    style={{
+                      color:colors.muted,
+                      fontSize:26,
+                      lineHeight:28
+                    }}
+                  >
+                    ×
+                  </Text>
+                </Pressable>
+              </View>
+
+              <Text
+                style={{
+                  color:colors.muted,
+                  fontSize:14,
+                  lineHeight:21,
+                  marginBottom:20
+                }}
+              >
+                AutoFace is designed to help you explore meaningful
+                connections privately and at your own pace. Atlas uses
+                the information you choose to share to provide
+                explainable compatibility signals.
+              </Text>
+
+              <View
+                style={{
+                  backgroundColor:colors.bg,
+                  borderWidth:1,
+                  borderColor:colors.line,
+                  borderRadius:18,
+                  padding:15,
+                  marginBottom:20
+                }}
+              >
+                <Text
+                  style={{
+                    color:colors.blue,
+                    fontSize:13,
+                    lineHeight:20,
+                    fontWeight:'900',
+                    textAlign:'center'
+                  }}
+                >
+                  Discover  →  Interest  →  Introduction  →  Conversation
+                </Text>
+              </View>
+
+              {[
+                {
+                  number:'1',
+                  title:'Discover thoughtfully',
+                  text:'Atlas considers compatibility, your preferences and the relationship information you choose to share. A recommendation is a reason to explore, not a guarantee of compatibility.'
+                },
+                {
+                  number:'2',
+                  title:'Interest stays private',
+                  text:'Expressing interest does not immediately start a conversation. Your interest remains private unless the connection becomes mutual.'
+                },
+                {
+                  number:'3',
+                  title:'Connect when it’s mutual',
+                  text:'When interest is mutual, AutoFace creates an introduction so you can decide whether you want to start a conversation.'
+                },
+                {
+                  number:'4',
+                  title:'Atlas helps along the way',
+                  text:'Atlas can explain compatibility signals, help you reflect on conversations and suggest useful next steps. You remain in control.'
+                }
+              ].map(item=>(
+                <View
+                  key={item.number}
+                  style={{
+                    flexDirection:'row',
+                    marginBottom:18
+                  }}
+                >
+                  <View
+                    style={{
+                      width:34,
+                      height:34,
+                      borderRadius:17,
+                      backgroundColor:colors.bg,
+                      borderWidth:1,
+                      borderColor:colors.blue,
+                      alignItems:'center',
+                      justifyContent:'center',
+                      marginRight:12
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color:colors.blue,
+                        fontSize:13,
+                        fontWeight:'900'
+                      }}
+                    >
+                      {item.number}
+                    </Text>
+                  </View>
+
+                  <View style={{flex:1}}>
+                    <Text
+                      style={{
+                        color:colors.ink,
+                        fontSize:15,
+                        fontWeight:'900',
+                        marginBottom:4
+                      }}
+                    >
+                      {item.title}
+                    </Text>
+
+                    <Text
+                      style={{
+                        color:colors.muted,
+                        fontSize:13,
+                        lineHeight:19
+                      }}
+                    >
+                      {item.text}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+
+              <View
+                style={{
+                  borderTopWidth:1,
+                  borderTopColor:colors.line,
+                  paddingTop:16,
+                  marginTop:2,
+                  marginBottom:18
+                }}
+              >
+                <Text
+                  style={{
+                    color:colors.muted,
+                    fontSize:12,
+                    lineHeight:18
+                  }}
+                >
+                  Atlas supports your decisions — it does not make them
+                  for you. You can change your Discovery preferences at
+                  any time.
+                </Text>
+              </View>
+
+              <Button
+                title="Got it"
+                onPress={()=>void dismissHowAutoFace()}
+              />
+
+              <Pressable
+                onPress={()=>setHowAutoFaceOpen(false)}
+                style={{
+                  alignItems:'center',
+                  paddingVertical:14
+                }}
+              >
+                <Text
+                  style={{
+                    color:colors.blue,
+                    fontSize:13,
+                    fontWeight:'800'
+                  }}
+                >
+                  Close for now
+                </Text>
+              </Pressable>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
       <Modal
         visible={preferencesOpen}
         transparent
@@ -2163,6 +2458,133 @@ export default function Discover(){
                 together with your preferences and relationship
                 signals, to explain considered introductions.
               </Text>
+            </View>
+          </View>
+        ):null}
+
+        {showHowAutoFace?(
+          <View
+            style={{
+              backgroundColor:colors.pink,
+              borderRadius:22,
+              padding:18,
+              marginBottom:18,
+              overflow:'hidden'
+            }}
+          >
+            <View
+              style={{
+                flexDirection:'row',
+                alignItems:'flex-start'
+              }}
+            >
+              <View
+                style={{
+                  width:42,
+                  height:42,
+                  borderRadius:21,
+                  backgroundColor:'rgba(255,255,255,0.18)',
+                  alignItems:'center',
+                  justifyContent:'center',
+                  marginRight:13
+                }}
+              >
+                <Ionicons
+                  name="heart"
+                  size={21}
+                  color="#FFFFFF"
+                />
+              </View>
+
+              <View style={{flex:1}}>
+                <Text
+                  style={{
+                    color:'#FFFFFF',
+                    fontSize:11,
+                    fontWeight:'900',
+                    letterSpacing:1.1,
+                    opacity:0.9
+                  }}
+                >
+                  HOW AUTOFACE WORKS
+                </Text>
+
+                <Text
+                  style={{
+                    color:'#FFFFFF',
+                    fontSize:18,
+                    lineHeight:23,
+                    fontWeight:'900',
+                    marginTop:4
+                  }}
+                >
+                  A more considered way to connect
+                </Text>
+
+                <Text
+                  style={{
+                    color:'#FFFFFF',
+                    fontSize:13,
+                    lineHeight:19,
+                    marginTop:7,
+                    opacity:0.9
+                  }}
+                >
+                  Discover → Interest → Introduce → Chat
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={{
+                flexDirection:'row',
+                alignItems:'center',
+                marginTop:16,
+                paddingTop:14,
+                borderTopWidth:1,
+                borderTopColor:'rgba(255,255,255,0.28)'
+              }}
+            >
+              <Pressable
+                accessibilityRole="button"
+                onPress={()=>setHowAutoFaceOpen(true)}
+                style={{
+                  flex:1,
+                  paddingVertical:3
+                }}
+              >
+                <Text
+                  style={{
+                    color:'#FFFFFF',
+                    fontSize:13,
+                    fontWeight:'900'
+                  }}
+                >
+                  Learn how AutoFace works  ›
+                </Text>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss How AutoFace works"
+                onPress={()=>void dismissHowAutoFace()}
+                hitSlop={10}
+                style={{
+                  paddingVertical:4,
+                  paddingLeft:14
+                }}
+              >
+                <Text
+                  style={{
+                    color:'#FFFFFF',
+                    fontSize:12,
+                    fontWeight:'800',
+                    opacity:0.88
+                  }}
+                >
+                  Got it
+                </Text>
+              </Pressable>
             </View>
           </View>
         ):null}

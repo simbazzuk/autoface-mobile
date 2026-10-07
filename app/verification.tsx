@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Body, Button, Card, H2, Screen } from '@/src/components/UI';
 import { useAppTheme } from '@/src/context/Theme';
+import { api } from '@/src/lib/api';
 import {
   nativeLivenessAvailable,
   startNativeLiveness,
@@ -26,6 +27,10 @@ type ResultResponse = {
   photoVerified?: boolean;
 };
 
+type ReadinessResponse = {
+  faceVerified?: boolean;
+};
+
 const CONSENT_VERSION = '2026-08-v1';
 
 export default function Verification() {
@@ -34,9 +39,40 @@ export default function Verification() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [biometricConsent, setBiometricConsent] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+  const [alreadyVerified, setAlreadyVerified] = useState(false);
 
   const configured = verificationApiConfigured();
   const nativeReady = nativeLivenessAvailable();
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkVerificationStatus() {
+      try {
+        const readiness = await api<ReadinessResponse>('/api/readiness');
+
+        if (active) {
+          setAlreadyVerified(readiness.faceVerified === true);
+        }
+      } catch (error) {
+        console.warn(
+          '[FaceVerification] unable to load current verification status',
+          error
+        );
+      } finally {
+        if (active) {
+          setCheckingStatus(false);
+        }
+      }
+    }
+
+    void checkVerificationStatus();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function begin() {
     if (busy || !biometricConsent) return;
@@ -57,7 +93,8 @@ export default function Verification() {
       );
 
       if (start.status === 'already_verified') {
-        setMessage('Your profile photo is already face verified.');
+        setAlreadyVerified(true);
+        setMessage('');
         return;
       }
 
@@ -87,7 +124,8 @@ export default function Verification() {
       );
 
       if (result.verified || result.livenessVerified) {
-        setMessage('Face verification complete.');
+        setAlreadyVerified(true);
+        setMessage('');
       } else {
         setMessage(
           'The check completed but verification was not confirmed. Please try again.'
@@ -117,6 +155,43 @@ export default function Verification() {
     nativeReady &&
     biometricConsent &&
     !busy;
+
+  if (checkingStatus) {
+    return (
+      <Screen eyebrow="AUTOFACE SECURITY" title="Face verification">
+        <Card>
+          <H2>Checking verification status…</H2>
+          <Body>Please wait while AutoFace checks your current verification.</Body>
+        </Card>
+      </Screen>
+    );
+  }
+
+  if (alreadyVerified) {
+    return (
+      <Screen eyebrow="AUTOFACE SECURITY" title="Face verification">
+        <Card>
+          <H2>✓ Face Verified</H2>
+
+          <Body>
+            Your identity has already completed AutoFace Face Verification.
+            You do not need to complete another biometric check.
+          </Body>
+
+          <Button
+            title="Continue"
+            onPress={() => router.replace('/(tabs)/discover')}
+          />
+        </Card>
+
+        <Button
+          title="Back to Profile"
+          secondary
+          onPress={() => router.replace('/(tabs)/profile')}
+        />
+      </Screen>
+    );
+  }
 
   return (
     <Screen eyebrow="AUTOFACE SECURITY" title="Face verification">

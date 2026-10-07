@@ -82,7 +82,7 @@ export default function HelpFeedback(){
             message:trimmed,
             platform:'ios',
             appVersion:'0.1.20',
-            buildNumber:'65'
+            buildNumber:'66'
           })
         }
       );

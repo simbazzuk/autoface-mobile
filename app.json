@@ -9,7 +9,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "chat.mip.autoface",
-      "buildNumber": "64",
+      "buildNumber": "66",
       "infoPlist": {
         "NSCameraUsageDescription": "AutoFace uses the camera for profile and authenticity verification.",
         "NSPhotoLibraryUsageDescription": "AutoFace uses your photo library so you can choose a profile photo.",

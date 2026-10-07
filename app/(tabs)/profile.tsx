@@ -1223,6 +1223,56 @@ export default function Profile(){
           />
         </Card>
 
+        <Card>
+          <H2>Help & feedback</H2>
+
+          <Body>
+            Get help, report a problem or tell us how we can
+            improve AutoFace.
+          </Body>
+
+          <Pressable
+            onPress={()=>router.push('/help-feedback')}
+            style={{
+              flexDirection:'row',
+              alignItems:'center',
+              justifyContent:'space-between',
+              paddingVertical:12
+            }}
+          >
+            <View style={{flex:1}}>
+              <Text
+                style={{
+                  color:colors.text,
+                  fontWeight:'800',
+                  fontSize:16
+                }}
+              >
+                Help & feedback
+              </Text>
+
+              <Text
+                style={{
+                  color:colors.muted,
+                  marginTop:3
+                }}
+              >
+                Send feedback or contact support
+              </Text>
+            </View>
+
+            <Text
+              style={{
+                color:colors.blue,
+                fontSize:24,
+                fontWeight:'700'
+              }}
+            >
+              ›
+            </Text>
+          </Pressable>
+        </Card>
+
         <Button
           title="Sign out"
           secondary
